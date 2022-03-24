@@ -1,6 +1,6 @@
 
 # Ignorerer jupyter notebook sine loggfiler
-
+#
 *__pycache__*
 
 .ipynb_checkpoints
