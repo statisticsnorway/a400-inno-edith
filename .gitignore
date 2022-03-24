@@ -1,0 +1,11 @@
+
+# Ignorerer jupyter notebook sine loggfiler
+
+*__pycache__*
+
+.ipynb_checkpoints
+*/ipynb_checkpoints/*
+
+.ipynb_checkpoints/kake_v3-checkpoint.ipynb
+
+.ipynb_checkpoints/threemap_side2-checkpoint.ipynb
