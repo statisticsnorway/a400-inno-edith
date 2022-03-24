@@ -13,7 +13,7 @@ def logg_tabell(url):
     print('Henter loggføringstabell')
     df = pd.read_sql(f"select * from {config['tabeller']['editeringer']}", con=engine)
     df = df[ # Kolonner som listes opp her vil vises i loggføringstabellen
-        ["orgnrNavn", "Variabel"]
+        ["orgnrNavn", "VARIABEL"]
         + [config["perioder"]["t"]["år"]]
         + ["Tidligere_verdi", "Kommentar", "Editert_av", "Log_tid"]
     ]
