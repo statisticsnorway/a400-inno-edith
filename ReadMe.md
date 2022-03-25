@@ -17,9 +17,8 @@ Oppskrift: xxx
 
 3) Kjør oppretting_database.ipynb for å etablere datagrunnlag (tabell raadata) 
     - OBS! Endre til riktig Oracle-brukernavn i celle 5
-    - Velg Cell" - "Run all"
-
-#### <b>OBS! Skal felt_id-variabelen fra DYNAREV hete noe annet? I default-oppsett er dette endret til VARIABEL. Ved endring til et annet navn kreves også endringer i templates-, og models-filer. </b>
+    - Velg "Cell" - "Run all"
+    - OBS! Skal felt_id-variabelen fra DYNAREV hete noe annet? I default-oppsett er dette endret til VARIABEL (<i>FELT_ID as VARIABEL i celle 8 <i/> . Ved endring til et annet navn kreves også endringer i templates-, og models-filer. 
 
 4) Kjør oppdatering_svarinngang.ipynb for å etablere tabell for svarinngang 
    - OBS! Endre til riktig Oracle-brukernavn i celle 3
@@ -29,5 +28,7 @@ Oppskrift: xxx
 
 5) Start edith med kommandoen " python3 app.py" i et terminalvindu
 
+
 Fungerer ikke app'en helt som du har tenkt? Sjekk i terminal-vinduet! Feilmeldinger dukker opp der
+
 Ønsker du å stoppe kjøring av appen? I terminalen, trykk Ctrl+C
