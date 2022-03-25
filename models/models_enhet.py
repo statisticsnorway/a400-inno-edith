@@ -128,7 +128,7 @@ def oppdater_database(df): # Funksjon for å lagre editering og loggføre bruker
     conn, engine, db = connect() # Fra models_delt.py
     CursorObject = conn.cursor()
     enhet = df[config['id_variabel']].loc[0] # Brukes for å finne den spesifikke raden i datasettet som endres
-    variabel = df['Variabel'].loc[0]
+    variabel = df['VARIABEL'].loc[0]
     data_som_endres = pd.read_sql(f"SELECT * from {config['tabeller']['raadata']} WHERE {config['id_variabel']} = '{enhet}' and VARIABEL ='{variabel}'", con=engine) # Leser inn hele raden med tidligere data
     #del data_som_endres['index'] # Fjerner unødvendige kolonner
     data_som_endres['Editert_av'] = df['Editert_av'].loc[0] # Henter info om hvem som editerte fra Edith sin tabell
