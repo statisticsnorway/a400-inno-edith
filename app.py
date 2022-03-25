@@ -553,5 +553,5 @@ def vis_kontroll_offcanvas_innhold(foretak):
 
 
 if __name__ == '__main__':
-    app.run_server(debug = True, port=7878)
+    app.run_server(debug = True, port=2264)
 
