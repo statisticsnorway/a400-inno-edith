@@ -26,9 +26,9 @@ with open("config.json") as config: # Laster in valg fra config.json
 def treeplot(n_click, var, grupp):
     if n_click:
         if len(var) == 1:
-            df = pd.read_sql(f'SELECT * FROM {config["tabeller"]["raadata"]} WHERE Variabel in ("{var[0]}")', con=engine)
+            df = pd.read_sql(f'SELECT * FROM {config["tabeller"]["raadata"]} WHERE VARIABEL in ("{var[0]}")', con=engine)
         if len(var) > 1:
-            df = pd.read_sql(f"SELECT * FROM {config['tabeller']['raadata']} WHERE Variabel in {tuple(var)}", con=engine)
+            df = pd.read_sql(f"SELECT * FROM {config['tabeller']['raadata']} WHERE VARIABEL in {tuple(var)}", con=engine)
         df = df.fillna(np.nan)
         fig = px.treemap(df, path = grupp , values = config["perioder"]["t"]["år"])
         graph = dcc.Graph(id = 'treemap', figure = fig)
@@ -45,7 +45,7 @@ def table_grid(data, grupp, clickData):
     for i in config["perioder"]: # Finnes sikkert en bedre løsning enn dette
         perioder[i] = config["perioder"][i]["år"] # Må kanskje finne en litt annen måte å gjøre det på hvis kobling av perioder skal skje i funksjonen
 #    str_cols = [config["id_variabel"], config["navn_variabel"], "Variabel"] # Kolonner til tabellen
-    str_cols = [config["kombinert_id_navn"], "Variabel"]
+    str_cols = [config["kombinert_id_navn"], "VARIABEL"]
     num_cols = list(perioder.values())
     """ Setter korrekt datatype til hver kolonne """
     df[grupp] = df[grupp].astype("object") # Sikrer at det er riktig datatype på kolonnene
@@ -90,7 +90,7 @@ def table_grid(data, grupp, clickData):
             df = df.loc[df[grupp[i]] == aggregater[i]]
     df = df[grupp + str_cols + num_cols]
     if nivå != "enhet": # Så lenge det ikke er på enhetsnivå så skal det aggregeres
-        df = df.groupby(grupp+["Variabel"]).agg({i : "sum" for i in num_cols}).reset_index()
+        df = df.groupby(grupp+["VARIABEL"]).agg({i : "sum" for i in num_cols}).reset_index()
     """ Gjør data fra dataframe klart til dash table """
     data = df.to_dict("rows")
     columns = [{'name': i, 'id': i} for i in df.columns]
@@ -100,7 +100,7 @@ def table_grid(data, grupp, clickData):
 
 def scatterplot_grid(x, y, checklist, aggregat, clickData):
     tilpasning_til_spørring = ""
-    variabel_filter = f"WHERE Variabel in {tuple([x]+[y])} "
+    variabel_filter = f"WHERE VARIABEL in {tuple([x]+[y])} "
     tilpasning_til_spørring = tilpasning_til_spørring + variabel_filter
 
     if clickData != None:
@@ -116,8 +116,8 @@ def scatterplot_grid(x, y, checklist, aggregat, clickData):
             tilpasning_til_spørring = tilpasning_til_spørring + aggregering_filter
     spørring = f"SELECT * FROM {config['tabeller']['raadata']} " + tilpasning_til_spørring
     df = pd.read_sql(spørring, con = engine)
-    df = df.loc[(df["Variabel"].isin([x, y]))].drop_duplicates(subset=["orgnrNavn", "Variabel"], keep="last")
-    df = df.pivot(index = "orgnrNavn", columns=["Variabel"], values = config["perioder"]["t"]["år"])
+    df = df.loc[(df["VARIABEL"].isin([x, y]))].drop_duplicates(subset=["orgnrNavn", "VARIABEL"], keep="last")
+    df = df.pivot(index = "orgnrNavn", columns=["VARIABEL"], values = config["perioder"]["t"]["år"])
     df = df[[x, y]].astype(float)
     if checklist != None: # Checklist starter som None
         if len(checklist) != 0: # Hvis man har krysset av er lengde mer enn 0
@@ -130,7 +130,7 @@ def scatterplot_grid(x, y, checklist, aggregat, clickData):
 
 def histogram_grid(variabel, bins, checklist, aggregat, clickData):
     tilpasning_til_spørring = ""
-    variabel_filter = f"WHERE Variabel = '{variabel}' "
+    variabel_filter = f"WHERE VARIABEL = '{variabel}' "
     tilpasning_til_spørring = tilpasning_til_spørring + variabel_filter
 
     if clickData != None:
@@ -168,7 +168,7 @@ def histogram_grid(variabel, bins, checklist, aggregat, clickData):
 
 def boxplot_grid(variabel, boxpoints, checklist, aggregat, clickData):
     tilpasning_til_spørring = ""
-    variabel_filter = f"WHERE Variabel = '{variabel}' "
+    variabel_filter = f"WHERE VARIABEL = '{variabel}' "
     tilpasning_til_spørring = tilpasning_til_spørring + variabel_filter
 
     if clickData != None:
@@ -222,14 +222,14 @@ def sammenlign_editert_ueditert(timestamp):
     print("Sammenligne4")
     dff = pd.concat([df, df_editert])
     dff = dff.sort_values(by="Log_tid", ascending=False)
-    dff = dff.drop_duplicates(subset=["Variabel", "orgnrNavn"], keep="first")
-    df = df.loc[df["Variabel"] == variabel]
-    dff = dff.loc[dff["Variabel"] == variabel]
+    dff = dff.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")
+    df = df.loc[df["VARIABEL"] == variabel]
+    dff = dff.loc[dff["VARIABEL"] == variabel]
     df["År_2021"] = df["År_2021"].astype("float")
     dff["År_2021"] = dff["År_2021"].astype("float")
-    df_r = df.groupby([aggregat, "Variabel"]).sum().reset_index()
-    df_e = dff.groupby([aggregat, "Variabel"]).sum().reset_index()
-    df_re = pd.merge(df_r, df_e, on = [aggregat, "Variabel"])
+    df_r = df.groupby([aggregat, "VARIABEL"]).sum().reset_index()
+    df_e = dff.groupby([aggregat, "VARIABEL"]).sum().reset_index()
+    df_re = pd.merge(df_r, df_e, on = [aggregat, "VARIABEL"])
     df_re["diff"] = (df_re["År_2021_y"]-df_re["År_2021_x"])/df_re["År_2021_x"]*100
     df_re = df_re.sort_values(by=aggregat, ascending=True)
     df_re.loc[(df_re["diff"] != 0) & (df_re["diff"].notna())]

@@ -19,6 +19,9 @@ from templates.homepage import Svarinngang
 from templates.navbar import Navbar
 #from templates.tidsserie import Tidsserie
 #from templates.uvektet import Grid
+
+from templates.grid import Grid
+
 #from templates.vektet import Plots
 from templates.enhet import Enhet
 from templates.logg import Logg
@@ -490,5 +493,5 @@ def kontroll_update_columns_clb(n_clicks, data, value, columns):
 
 
 if __name__ == '__main__':
-    app.run_server(debug = True, port=7979)
+    app.run_server(debug = False, port=2264)
 
