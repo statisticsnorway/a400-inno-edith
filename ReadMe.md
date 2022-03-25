@@ -28,3 +28,6 @@ Oppskrift: xxx
    
 
 5) Start edith med kommandoen " python3 app.py" i et terminalvindu
+
+Fungerer ikke app'en helt som du har tenkt? Sjekk i terminal-vinduet! Feilmeldinger dukker opp der
+Ønsker du å stoppe kjøring av appen? I terminalen, trykk Ctrl+C
