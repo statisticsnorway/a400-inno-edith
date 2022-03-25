@@ -99,7 +99,7 @@ def svarinngang_kake(dropdown, hm_input):
     if dropdown:
         #Henter ut data basert på dropdown
         #dette kan forbedres. Det hentes ut samme data 3 steder, for linje, kake og tabell. Det burde heller hentes ut en gang og lagres i en store som det så burde hentes fra.
-        df = pd.read_sql(f"SELECT * from svarinngang_21 WHERE FELT_ID = '{dropdown.upper()}'", con=engine, parse_dates=['INN_DATO', 'REV_DATO']) 
+        df = pd.read_sql(f"SELECT * from svarinngang WHERE FELT_ID = '{dropdown.upper()}'", con=engine, parse_dates=['INN_DATO', 'REV_DATO']) 
         #Erstatter ved bruk av loc
         df.loc[df['REV_DATO'].isnull(),'editert'] = 'IE'
         df.loc[df['REV_DATO'].notnull(), 'editert'] = 'E'
@@ -141,7 +141,7 @@ def svarinngang_kake(dropdown, hm_input):
 def svarinngang_tbl1(dropdown, hm_input):
     print("Svarinngang - tabell")
     if dropdown:
-        df = pd.read_sql(f"SELECT * from svarinngang_21 WHERE FELT_ID = '{dropdown.upper()}'", con=engine, parse_dates=['INN_DATO', 'REV_DATO'])
+        df = pd.read_sql(f"SELECT * from svarinngang WHERE FELT_ID = '{dropdown.upper()}'", con=engine, parse_dates=['INN_DATO', 'REV_DATO'])
         df['REV_KODE'] = df['REV_KODE'].fillna('U')
         df_alle = klargjor_tbl1_svar(df, dropdown=dropdown, navn='Alle')
         print("Svarinngang - tabell - 1")

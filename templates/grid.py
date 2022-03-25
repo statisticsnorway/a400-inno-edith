@@ -27,8 +27,8 @@ with open("config.json") as config:
 
 nav = Navbar()
 
-df_opt_var = pd.read_sql(f"SELECT distinct(Variabel) FROM {config['tabeller']['raadata']}", con=engine)
-options_var = [{'label': x, 'value': x} for x in df_opt_var["Variabel"].unique()]
+df_opt_var = pd.read_sql(f"SELECT distinct(VARIABEL) FROM {config['tabeller']['raadata']}", con=engine)
+options_var = [{'label': x, 'value': x} for x in df_opt_var["VARIABEL"].unique()]
 
 options_grupp = [{'label': x, 'value': x} for x in config["aggregater"]]
 

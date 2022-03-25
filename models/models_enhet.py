@@ -30,7 +30,7 @@ def enhetstabell_store(org): # Sett inn dette , variabel
         df_e = pd.read_sql(f"select * from editeringer WHERE orgnrNavn = '{org}'", con=engine) 
         df = pd.concat([df, df_e])
         df = df.sort_values(by="Log_tid", ascending=False)
-        df = df.drop_duplicates(subset=["Variabel", "OrgnrNavn"], keep="first")
+        df = df.drop_duplicates(subset=["VARIABEL", "OrgnrNavn"], keep="first")
     data = df.to_dict('rows')
     columns = [{'name': i, 'id': i} for i in df.columns]
     return data #table(id = 'table3', data = data, columns = columns)
@@ -44,10 +44,10 @@ def enhetstabell1(n_clicks, data, var):
     if n_clicks:
         df = pd.DataFrame().from_dict(data)
         print(df.head())
-        df = df[[config["id_variabel"], config["navn_variabel"], "Variabel"] + list(perioder.values())]
+        df = df[[config["id_variabel"], config["navn_variabel"], "VARIABEL"] + list(perioder.values())]
         df["Editert_av"] = request.authorization["username"]
         df["Kommentar"] = ""
-        df = df[df['Variabel'].isin(var)]
+        df = df[df['VARIABEL'].isin(var)]
         data = df.to_dict('rows')
         """ Definerer hvilke kolonner som skal være selekterbare, og hvilke som ikke skal være det """
         columns = [{'name': i, 'id': i, 'on_change': {'action': 'validate'}, 'selectable': True} if i in set([config["perioder"]["t"]["år"], 'Vekt']) 
@@ -129,7 +129,7 @@ def oppdater_database(df): # Funksjon for å lagre editering og loggføre bruker
     CursorObject = conn.cursor()
     enhet = df[config['id_variabel']].loc[0] # Brukes for å finne den spesifikke raden i datasettet som endres
     variabel = df['Variabel'].loc[0]
-    data_som_endres = pd.read_sql(f"SELECT * from {config['tabeller']['raadata']} WHERE {config['id_variabel']} = '{enhet}' and Variabel ='{variabel}'", con=engine) # Leser inn hele raden med tidligere data
+    data_som_endres = pd.read_sql(f"SELECT * from {config['tabeller']['raadata']} WHERE {config['id_variabel']} = '{enhet}' and VARIABEL ='{variabel}'", con=engine) # Leser inn hele raden med tidligere data
     #del data_som_endres['index'] # Fjerner unødvendige kolonner
     data_som_endres['Editert_av'] = df['Editert_av'].loc[0] # Henter info om hvem som editerte fra Edith sin tabell
     data_som_endres['Kommentar'] = df['Kommentar'].loc[0] # Henter kommentaren som ble lagt inn i Edith sin tabell
@@ -175,18 +175,18 @@ def enhet_plot(orgnrnavn, n_clicks): # Nøkkeltall
     perioder = perioder[:-2] # fjerner siste ", " så listen blir riktig
     if n_clicks:
         variabler = config["nøkkeltall_enhetssiden"]
-        df = pd.read_sql(f"SELECT Variabel, {perioder} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and Variabel in {tuple(variabler)}", con=engine)
+        df = pd.read_sql(f"SELECT VARIABEL, {perioder} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and VARIABEL in {tuple(variabler)}", con=engine)
         # Start - midlertidig fiks på feil datatype i kolonne. Fjernes når kolonner har riktig verdi i sqlite
         perioder = []
         for i in config["perioder"]:
             perioder = perioder + [config["perioder"][i]["år"]]
         df[perioder] = df[perioder].astype("float")
         # Slutt - midlertidig fiks på feil datatype i kolonne. Fjernes når kolonner har riktig verdi i sqlite
-        df = df.melt(id_vars=["Variabel"], var_name="År", value_name="Verdi").sort_values(["Variabel", "År"]) # Sorteres for å kunne regne prosentdifferanser
+        df = df.melt(id_vars=["VARIABEL"], var_name="År", value_name="Verdi").sort_values(["VARIABEL", "År"]) # Sorteres for å kunne regne prosentdifferanser
         if len(config["perioder"]) > 1:            
             for i in variabler:
-                df.loc[df["Variabel"] == i, "diff"] = (round(df["Verdi"].pct_change(), 3)*100).map("{:,.1f}%".format)
-                print(df.loc[df["Variabel"] == i].head())
+                df.loc[df["VARIABEL"] == i, "diff"] = (round(df["Verdi"].pct_change(), 3)*100).map("{:,.1f}%".format)
+                print(df.loc[df["VARIABEL"] == i].head())
         """ Lager figur """
         fig = px.bar(
             df, 
@@ -195,7 +195,7 @@ def enhet_plot(orgnrnavn, n_clicks): # Nøkkeltall
             #text = "diff", # Bare hvis len > 1
             barmode = "group", 
             title="Nøkkeltall", 
-            facet_col="Variabel", 
+            facet_col="VARIABEL", 
             facet_col_spacing=0.04, 
             facet_row_spacing=0.04
         )
@@ -213,32 +213,32 @@ def enhet_plot_bar_agg(data, kol_ed, var, grupp, orgnrnavn, n_clicks):
         temp_dict[i] = config["perioder"][i]["år"] # Må kanskje finne en litt annen måte å gjøre det på hvis kobling av perioder skal skje i funksjonen
     """ Laster inn data """
     if len(var) == 1:
-        grupp_var = pd.read_sql(f"SELECT {grupp} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and Variabel = '{var[0]}'", con=engine).loc[0,grupp]
-        df_grupp = pd.read_sql(f"SELECT Variabel, SUM({t_2}) {t_2}, SUM({t_1}) {t_1}, SUM({t}) {t}, {grupp} FROM {config['tabeller']['raadata']} WHERE {grupp} = '{grupp_var}' and Variabel = '{var[0]}' and OrgnrNavn NOT IN ('{orgnrnavn}') GROUP BY Variabel", con=engine)
+        grupp_var = pd.read_sql(f"SELECT {grupp} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and VARIABEL = '{var[0]}'", con=engine).loc[0,grupp]
+        df_grupp = pd.read_sql(f"SELECT VARIABEL, SUM({t_2}) {t_2}, SUM({t_1}) {t_1}, SUM({t}) {t}, {grupp} FROM {config['tabeller']['raadata']} WHERE {grupp} = '{grupp_var}' and VARIABEL = '{var[0]}' and OrgnrNavn NOT IN ('{orgnrnavn}') GROUP BY VARIABEL", con=engine)
     else: # Hvis var er mer enn ett element må det skrives som en tuple i SQL spørringen
-        grupp_var = pd.read_sql(f"SELECT {grupp} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and Variabel IN {tuple(var)}", con=engine).loc[0,grupp]
-        df_grupp = pd.read_sql(f"SELECT Variabel, SUM({t_2}) {t_2}, SUM({t_1}) {t_1}, SUM({t}) {t}, {grupp} FROM {config['tabeller']['raadata']} WHERE {grupp} = '{grupp_var}' and Variabel IN {tuple(var)} and OrgnrNavn NOT IN ('{orgnrnavn}') GROUP BY Variabel", con=engine)
+        grupp_var = pd.read_sql(f"SELECT {grupp} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and VARIABEL IN {tuple(var)}", con=engine).loc[0,grupp]
+        df_grupp = pd.read_sql(f"SELECT VARIABEL, SUM({t_2}) {t_2}, SUM({t_1}) {t_1}, SUM({t}) {t}, {grupp} FROM {config['tabeller']['raadata']} WHERE {grupp} = '{grupp_var}' and VARIABEL IN {tuple(var)} and OrgnrNavn NOT IN ('{orgnrnavn}') GROUP BY VARIABEL", con=engine)
     df = pd.DataFrame().from_dict(data)
     """ Tilpasser data for visualisering """
     df["Enhet"] = df["Navn"]
     df_grupp["Enhet"] = "Andre"
-    kolonner = ["Enhet", "Variabel", t_2, t_1, t]
+    kolonner = ["Enhet", "VARIABEL", t_2, t_1, t]
     if n_clicks:
         if code["perioder"][0]["t"][0]["år"] + "_editert" in df.columns:
             kolonner = kolonner+[code["perioder"][0]["t"][0]["år"] + "_editert"]
             df_grupp[code["perioder"][0]["t"][0]["år"] + "_editert"] = df_grupp[t]
     df = df[kolonner]
     df_grupp = df_grupp[kolonner]
-    df1 = df.melt(id_vars=["Variabel", "Enhet"], var_name="År", value_name="value")
-    df2 = df_grupp.melt(id_vars=["Variabel", "Enhet"], var_name="År", value_name="value")
+    df1 = df.melt(id_vars=["VARIABEL", "Enhet"], var_name="År", value_name="value")
+    df2 = df_grupp.melt(id_vars=["VARIABEL", "Enhet"], var_name="År", value_name="value")
     df_merge = pd.concat([df1, df2])
 
     """ Lager figurer """
-    fig1 = px.bar(df1, x="År", y="value", barmode = "group", title="Utvikling over tid", facet_col="Variabel", category_orders={"Variabel": var},facet_col_spacing=0.04, facet_row_spacing=0.04)
+    fig1 = px.bar(df1, x="År", y="value", barmode = "group", title="Utvikling over tid", facet_col="VARIABEL", category_orders={"VARIABEL": var},facet_col_spacing=0.04, facet_row_spacing=0.04)
     fig1.update_yaxes(matches=None, showticklabels=True)
     fig1.update_layout(bargap=0.2,margin=dict(t=150))
     graph1 = dcc.Graph(id = 'enhet_bar_var', figure = fig1)
-    fig2 = px.bar(df_merge,x="value",y="År",orientation="h",color="Enhet",barmode="stack",facet_col="Variabel", title=str(grupp)+" "+str(grupp_var))
+    fig2 = px.bar(df_merge,x="value",y="År",orientation="h",color="Enhet",barmode="stack",facet_col="VARIABEL", title=str(grupp)+" "+str(grupp_var))
     fig2.update_xaxes(matches=None, showticklabels=True)
     fig2.update_layout(bargap=0.2,margin=dict(t=150))
     graph2 = dcc.Graph(id = 'enhet_bar_var', figure = fig2)

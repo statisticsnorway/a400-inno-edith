@@ -1,11 +1,21 @@
 {
-    "undersøkelse":"Potet og grovfor",
+    "undersøkelse":"Fou",
     "perioder":
         {
             "t":{
-                "delreg":93020,
-                "år":"År_2020",
+                "delreg":2320,
+                "år":"År_2021",
                 "år_til_år":"Differanse År_2020 til År_2021"
+            },
+            "t-1":{
+                "delreg": 2319,
+                "år": "År_2020",
+                "år_til_år": "Differanse År_2019 til År_2020"
+            },
+            "t-2":{
+                "delreg": 2318,
+                "år": "År_2019",
+                "år_til_år": "Differanse År_2018 til År_2019"
             }
         },
     "aggregater":
@@ -13,19 +23,21 @@
             "NACE1",
             "ORG_FORM"
         ],
-    "id_variabel":"orgnr_delreg",
-    "navn_variabel": "navn_delreg",
+    "id_variabel":"ORGNR",
+    "navn_variabel": "NAVN",
     "kombinert_id_navn": "orgnrNavn",
     "nøkkeltall_enhetssiden":
         [
-            "POTETAVLING"
+            "KOSTNADERTOTALT",
+            "PERSONERTOTALT",
+            "INTFOU"
         ],
     "variabel_navn": {
         "gammelt navn": "nytt navn"
     },
     "endringsvariabler": "str_cols i update_table",
     "data":{
-        "filsti": "/ssb/stamme02/jordbruk/sbgrovfor/wk6"
+        "filsti": "/home/acd@ssb.no/db_edith"
     },
     "tabeller":{
         "raadata": "raadata",
