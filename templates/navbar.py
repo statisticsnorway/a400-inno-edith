@@ -9,7 +9,7 @@ def Navbar():
 #            dbc.NavItem(dbc.NavLink("Tidsserie", href="/tidsserie")),
             dbc.NavItem(dbc.NavLink("Enhet", href="/enhet")),
             dbc.NavItem(dbc.NavLink("Logg", href="/logg")),
-#            dbc.NavItem(dbc.NavLink("Kontrollér", href="/kontroller"))
+            dbc.NavItem(dbc.NavLink("Kontrollér", href="/kontroller"))
         ],
         brand = "Svarinngang",
         brand_href="/svarinngang",

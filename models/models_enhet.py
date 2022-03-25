@@ -13,7 +13,10 @@ import dash
 import dash_core_components as dcc
 from dash import no_update
 from dash.exceptions import PreventUpdate
+import dash_html_components as html
 from flask import request # for brukernavn
+
+import dash_table as dt
 
 import plotly.express as px
 
@@ -21,7 +24,9 @@ import plotly.express as px
 with open("config.json") as config:
     config = json.load(config)
 
-
+with open("variabler.json") as variabler:
+    config_variabler = json.load(variabler)
+    
 
 def enhetstabell_store(org): # Sett inn dette , variabel
     print("Laster inn data")
@@ -128,8 +133,8 @@ def oppdater_database(df): # Funksjon for å lagre editering og loggføre bruker
     conn, engine, db = connect() # Fra models_delt.py
     CursorObject = conn.cursor()
     enhet = df[config['id_variabel']].loc[0] # Brukes for å finne den spesifikke raden i datasettet som endres
-    variabel = df['Variabel'].loc[0]
-    data_som_endres = pd.read_sql(f"SELECT * from {config['tabeller']['raadata']} WHERE {config['id_variabel']} = '{enhet}' and VARIABEL ='{variabel}'", con=engine) # Leser inn hele raden med tidligere data
+    variabel = df['VARIABEL'].loc[0]
+    data_som_endres = pd.read_sql(f"SELECT * from {config['tabeller']['raadata']} WHERE {config['id_variabel']} = '{enhet}' and Variabel ='{variabel}'", con=engine) # Leser inn hele raden med tidligere data
     #del data_som_endres['index'] # Fjerner unødvendige kolonner
     data_som_endres['Editert_av'] = df['Editert_av'].loc[0] # Henter info om hvem som editerte fra Edith sin tabell
     data_som_endres['Kommentar'] = df['Kommentar'].loc[0] # Henter kommentaren som ble lagt inn i Edith sin tabell
@@ -175,7 +180,7 @@ def enhet_plot(orgnrnavn, n_clicks): # Nøkkeltall
     perioder = perioder[:-2] # fjerner siste ", " så listen blir riktig
     if n_clicks:
         variabler = config["nøkkeltall_enhetssiden"]
-        df = pd.read_sql(f"SELECT VARIABEL, {perioder} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and VARIABEL in {tuple(variabler)}", con=engine)
+        df = pd.read_sql(f"SELECT Variabel, {perioder} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and Variabel in {tuple(variabler)}", con=engine)
         # Start - midlertidig fiks på feil datatype i kolonne. Fjernes når kolonner har riktig verdi i sqlite
         perioder = []
         for i in config["perioder"]:
@@ -213,16 +218,16 @@ def enhet_plot_bar_agg(data, kol_ed, var, grupp, orgnrnavn, n_clicks):
         temp_dict[i] = config["perioder"][i]["år"] # Må kanskje finne en litt annen måte å gjøre det på hvis kobling av perioder skal skje i funksjonen
     """ Laster inn data """
     if len(var) == 1:
-        grupp_var = pd.read_sql(f"SELECT {grupp} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and VARIABEL = '{var[0]}'", con=engine).loc[0,grupp]
-        df_grupp = pd.read_sql(f"SELECT VARIABEL, SUM({t_2}) {t_2}, SUM({t_1}) {t_1}, SUM({t}) {t}, {grupp} FROM {config['tabeller']['raadata']} WHERE {grupp} = '{grupp_var}' and VARIABEL = '{var[0]}' and OrgnrNavn NOT IN ('{orgnrnavn}') GROUP BY VARIABEL", con=engine)
+        grupp_var = pd.read_sql(f"SELECT {grupp} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and Variabel = '{var[0]}'", con=engine).loc[0,grupp]
+        df_grupp = pd.read_sql(f"SELECT Variabel, SUM({t_2}) {t_2}, SUM({t_1}) {t_1}, SUM({t}) {t}, {grupp} FROM {config['tabeller']['raadata']} WHERE {grupp} = '{grupp_var}' and Variabel = '{var[0]}' and OrgnrNavn NOT IN ('{orgnrnavn}') GROUP BY Variabel", con=engine)
     else: # Hvis var er mer enn ett element må det skrives som en tuple i SQL spørringen
-        grupp_var = pd.read_sql(f"SELECT {grupp} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and VARIABEL IN {tuple(var)}", con=engine).loc[0,grupp]
-        df_grupp = pd.read_sql(f"SELECT VARIABEL, SUM({t_2}) {t_2}, SUM({t_1}) {t_1}, SUM({t}) {t}, {grupp} FROM {config['tabeller']['raadata']} WHERE {grupp} = '{grupp_var}' and VARIABEL IN {tuple(var)} and OrgnrNavn NOT IN ('{orgnrnavn}') GROUP BY VARIABEL", con=engine)
+        grupp_var = pd.read_sql(f"SELECT {grupp} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and Variabel IN {tuple(var)}", con=engine).loc[0,grupp]
+        df_grupp = pd.read_sql(f"SELECT Variabel, SUM({t_2}) {t_2}, SUM({t_1}) {t_1}, SUM({t}) {t}, {grupp} FROM {config['tabeller']['raadata']} WHERE {grupp} = '{grupp_var}' and Variabel IN {tuple(var)} and OrgnrNavn NOT IN ('{orgnrnavn}') GROUP BY Variabel", con=engine)
     df = pd.DataFrame().from_dict(data)
     """ Tilpasser data for visualisering """
     df["Enhet"] = df["Navn"]
     df_grupp["Enhet"] = "Andre"
-    kolonner = ["Enhet", "VARIABEL", t_2, t_1, t]
+    kolonner = ["Enhet", "Variabel", t_2, t_1, t]
     if n_clicks:
         if code["perioder"][0]["t"][0]["år"] + "_editert" in df.columns:
             kolonner = kolonner+[code["perioder"][0]["t"][0]["år"] + "_editert"]
@@ -234,7 +239,7 @@ def enhet_plot_bar_agg(data, kol_ed, var, grupp, orgnrnavn, n_clicks):
     df_merge = pd.concat([df1, df2])
 
     """ Lager figurer """
-    fig1 = px.bar(df1, x="År", y="value", barmode = "group", title="Utvikling over tid", facet_col="VARIABEL", category_orders={"VARIABEL": var},facet_col_spacing=0.04, facet_row_spacing=0.04)
+    fig1 = px.bar(df1, x="År", y="value", barmode = "group", title="Utvikling over tid", facet_col="VARIABEL", category_orders={"Variabel": var},facet_col_spacing=0.04, facet_row_spacing=0.04)
     fig1.update_yaxes(matches=None, showticklabels=True)
     fig1.update_layout(bargap=0.2,margin=dict(t=150))
     graph1 = dcc.Graph(id = 'enhet_bar_var', figure = fig1)
@@ -243,6 +248,28 @@ def enhet_plot_bar_agg(data, kol_ed, var, grupp, orgnrnavn, n_clicks):
     fig2.update_layout(bargap=0.2,margin=dict(t=150))
     graph2 = dcc.Graph(id = 'enhet_bar_var', figure = fig2)
     return graph1, graph2, None
+
+
+def offcanvas_innhold(foretak):
+    if foretak:
+        print("Henter metadata og kommentarer til sidebar")
+        metadata = tuple(config_variabler["metadatavariabler"])
+        print(metadata)
+        #df = pd.read_sql(f'SELECT Kommentar FROM {config["tabeller"]["editeringer"]} WHERE ORGNR = {str(foretak)[:9]}', con=engine)
+        df = pd.read_sql(f'SELECT Variabel, {config["perioder"]["t"]["år"]}  AS VERDI FROM {config["tabeller"]["raadata"]} WHERE ORGNR = {str(foretak)[:9]} AND Variabel IN {metadata}', con=engine).drop_duplicates()
+        print(df)
+        data = df.to_dict("rows")
+        columns = [{'name': i, 'id': i} for i in df.columns]
+        print(data)
+        return dt.DataTable(
+                style_as_list_view = True,
+                style_cell = {'textAlign': 'left'},
+                style_data = {
+                    'whiteSpace': 'normal',
+                    'height': 'auto',
+                },
+                data = data,
+                columns = columns), html.P(), html.P("Kan lukkes ved å trykke på Esc")  
 
 
 
