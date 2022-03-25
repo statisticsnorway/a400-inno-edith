@@ -9,23 +9,20 @@ import dash
 from models.models_delt import connect
 from models.models_homepage import svarinngang_linje, svarinngang_kake, svarinngang_tbl1, klargjor_tbl1_svar
 from models.models_grid import treeplot, table_grid, scatterplot_grid, histogram_grid, boxplot_grid, sammenlign_editert_ueditert
-#from models.models_plots import bubble_plt_side
-from models.models_enhet import enhetstabell1, enhet_plot, enhetstabell_store, update_columns, enhet_plot_bar_agg
-#from models.models_tidsserie import display_time_series
+from models.models_plots import bubble_plt_side
+from models.models_enhet import enhetstabell1, enhet_plot, enhetstabell_store, update_columns, enhet_plot_bar_agg, offcanvas_innhold
+from models.models_tidsserie import display_time_series
 from models.models_logg import logg_tabell
-#from models.models_kontroller import feilliste_tabell, innhent_feilliste, oppdater_feilliste_db, model_feilliste_figur, kontroll_enhetstabell_store, kontroll_update_columns, kontroll_enhetstabell
+from models.models_kontroller import feilliste_tabell, innhent_feilliste, oppdater_feilliste_db, model_feilliste_figur, kontroll_enhetstabell_store, kontroll_update_columns, kontroll_enhetstabell, kontroll_offcanvas_innhold
 
 from templates.homepage import Svarinngang
 from templates.navbar import Navbar
 #from templates.tidsserie import Tidsserie
 #from templates.uvektet import Grid
-
-from templates.grid import Grid
-
 #from templates.vektet import Plots
-from templates.enhet import Enhet
+#from templates.enhet import Enhet
 from templates.logg import Logg
-#from templates.kontroller import Kontroller
+from templates.kontroller import Kontroller
 
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
@@ -91,7 +88,7 @@ edith_layout = go.layout.Template({ # Styler plotly figurer
         }
     }
 })
-
+'''
 #pio.templates.default = edith_layout # Velger egendefinert template
 offcanvas = html.Div(
     dbc.Offcanvas(
@@ -102,18 +99,18 @@ offcanvas = html.Div(
                 html.P("Kan lukkes ved å trykke på Esc")
             ],
             id="offcanvas",
-            title="Informasjon om foretak.",
+            title="Informasjon om foretak",
             is_open = False,
             backdrop = False,
             scrollable = True,
             placement = "end"
         )
 )
+'''
 #Layout
 app.layout = html.Div([
     dcc.Store(id='clickdata', storage_type='local'), # Vet ikke hva clickdata er for
     dcc.Location(id = 'url', refresh = False),
-    offcanvas,
     dbc.Row([
         dbc.Col(html.Img(src="assets/ssblogo.png", style = {"width": "300px"}), width=4), # Kan være praktisk med gjennomsiktig bakgrunn på logoen
         dbc.Col(html.H1("EDITH"))
@@ -140,38 +137,6 @@ def display_page(pathname):
         return Kontroller()
     else:
         return Svarinngang()
-
-
-# Offcanvas
-@app.callback(
-    Output("offcanvas", "is_open"),
-    Input("offcanvas_knapp", "n_clicks"),
-    State("offcanvas", "is_open"),
-)
-def toggle_offcanvas(n1, is_open):
-    if n1:
-        return not is_open
-    return is_open
-
-@app.callback(
-    Output("offcanvas", "children"),
-    [
-        Input('var_foretak', 'value')
-    ]
-)
-def offcanvas_innhold(foretak):
-    df = pd.read_sql(f'SELECT Kommentar FROM {config["tabeller"]["editeringer"]} WHERE ORGNR = {str(foretak)[:9]}', con=engine)
-    data = df.to_dict("rows")
-    columns = [{'name': i, 'id': i} for i in df.columns]
-    return dt.DataTable(
-            style_as_list_view = True,
-            style_cell = {'textAlign': 'left'},
-            style_data = {
-                'whiteSpace': 'normal',
-                'height': 'auto',
-            },
-            data = data,
-            columns = columns), html.P(), html.P("Kan lukkes ved å trykke på Esc")
 
 
 ##############################################
@@ -404,7 +369,32 @@ def enhetsgraf3_clb(data, kol_ed, n_click, var, grupp, orgnrnavn):
     [Input('table3', 'selected_columns')],
     [State('table3', 'columns')])
 def update_columns_clb(n_clicks, data, value, columns):
+    print(dash.callback_context.inputs_list)
     return update_columns(n_clicks, data, value, columns)
+
+
+# Offcanvas
+
+@app.callback(
+    Output("offcanvas", "is_open"),
+    Input("offcanvas_knapp", "n_clicks"),
+    State("offcanvas", "is_open"),
+)
+def toggle_offcanvas(n1, is_open):
+    if n1:
+        return not is_open
+    return is_open
+
+@app.callback(
+    Output("offcanvas", "children"),
+    [
+        Input('var_foretak', 'value')
+    ]
+)
+
+def show_offcanvas_innhold(foretak):
+    print(dash.callback_context.inputs_list)
+    return offcanvas_innhold(foretak)
 
 
 #####################
@@ -453,31 +443,64 @@ def oppdater_feilliste_clb(n_clicks, data):
     return oppdater_feilliste_db(data)
 
 
-
-# Oppdaterer figuren på kontroller-siden (histogram med hjelpevar og hovedvar)
+ 
+# Oppdaterer figuren på kontroller-siden (histogram med hjelpevar og hovedvar), basert på klikkdata fra tabell
 @app.callback(
     Output('figur_feilliste_vars', 'children'),
-    [Input('dropdown_enhet', 'value'),
-    Input('velg_feilliste', 'value')]
+    [
+    Input("feilliste_tabell_endret", "active_cell"), 
+    Input('feilliste_tabell_endret', 'derived_virtual_data'),
+    Input('velg_feilliste', 'value')
+    ]
 )
-def show_feilliste_figur(enhet, feilliste):
-    return model_feilliste_figur(enhet, feilliste)
+def show_feilliste_figur(enhet_rad, tabelldata, feilliste):
+    return model_feilliste_figur(enhet_rad, tabelldata, feilliste)
+
 
 
 #Tabell for enhet på kontroll-side
+@app.callback(Output('kontroll_tabell_enhet', 'data'),
+              [
+                  Input('feilliste_tabell_endret', 'active_cell'),
+                  Input('feilliste_tabell_endret', 'derived_virtual_data')
+              ])
+def kontroll_enhetsdata_clb(enhet_rad, tabelldata):
+    return kontroll_enhetstabell_store(enhet_rad, tabelldata)
 
+
+
+@app.callback(Output('kontroll_enhet_tabell_div', 'children'),
+              [
+                  Input('feilliste_tabell_endret', 'active_cell'),
+                  Input('kontroll_tabell_enhet', 'data')
+              ])
+def kontroll_enhetstabell_clb(enhet_rad, data):
+    #print(dash.callback_context.inputs_list)
+    return kontroll_enhetstabell(enhet_rad, data)
+
+
+
+
+
+'''
+#### De med dropdown
+#Tabell for enhet på kontroll-side
 @app.callback(Output('kontroll_tabell_enhet', 'data'),
               [
                   Input('dropdown_enhet', 'value'),
               ])
-def kontroll_enhetsdata_clb(org): # sett inn dette: , variabel. wtf
-    return kontroll_enhetstabell_store(org) # sett inn dette: , variabel. wtf
+def kontroll_enhetsdata_clb(org):
+    return kontroll_enhetstabell_store(org)
 
 @app.callback(Output('kontroll_enhet_tabell_div', 'children'),
               Input('dropdown_enhet', 'value'),
               Input('kontroll_tabell_enhet', 'data'))
 def kontroll_enhetstabell_clb(n_clicks, data):
+    #print(dash.callback_context.inputs_list)
     return kontroll_enhetstabell(n_clicks, data)
+'''
+
+
 
 @app.callback(
     [Output('kontroll_enhet_tabell', 'data')],
@@ -488,10 +511,47 @@ def kontroll_enhetstabell_clb(n_clicks, data):
     [Input('kontroll_enhet_tabell', 'selected_columns')],
     [State('kontroll_enhet_tabell', 'columns')])
 def kontroll_update_columns_clb(n_clicks, data, value, columns):
+    print(dash.callback_context.inputs_list)
     return kontroll_update_columns(n_clicks, data, value, columns)
 
+# Offcanvas
+@app.callback(
+    Output("kontroll_offcanvas", "is_open"),
+    Input("kontroll_offcanvas_knapp", "n_clicks"),
+    State("kontroll_offcanvas", "is_open"),
+)
+
+def toggle_offcanvas(n1, is_open):
+    print(dash.callback_context.inputs_list)
+    if n1:
+        return not is_open
+    return is_open
+
+
+@app.callback(
+    Output("kontroll_offcanvas", "children"),
+    [
+        Input('feilliste_tabell_endret', 'active_cell'),
+        Input('feilliste_tabell_endret', 'derived_virtual_data')
+    ])
+def vis_kontroll_offcanvas_innhold(enhet_rad, tabelldata):
+    print(dash.callback_context.inputs_list)
+    return kontroll_offcanvas_innhold(enhet_rad, tabelldata)
+
+
+'''
+@app.callback(
+    Output("kontroll_offcanvas", "children"),
+    [
+        Input('dropdown_enhet', 'value')
+    ]
+)
+def vis_kontroll_offcanvas_innhold(foretak):
+    print(dash.callback_context.inputs_list)
+    return kontroll_offcanvas_innhold(foretak)
+'''
 
 
 if __name__ == '__main__':
-    app.run_server(debug = False, port=2264)
+    app.run_server(debug = True, port=9070)
 
