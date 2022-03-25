@@ -21,8 +21,8 @@ with open("config.json") as config: # Laster in valg fra config.json
 
 
 nav = Navbar()
-df_opt_var = pd.read_sql(f"SELECT distinct(Variabel) FROM {config['tabeller']['raadata']}", con=engine)
-options_var = [{'label': x, 'value': x} for x in df_opt_var["Variabel"].unique()]
+df_opt_var = pd.read_sql(f"SELECT distinct(VARIABEL) FROM {config['tabeller']['raadata']}", con=engine)
+options_var = [{'label': x, 'value': x} for x in df_opt_var["VARIABEL"].unique()]
 
 df_opt_foretak = pd.read_sql(f"SELECT distinct(orgnrNavn) FROM {config['tabeller']['raadata']}", con=engine) # Henter ut unike orgnrNavn
 options_for = [{'label': x, 'value': x} for x in df_opt_foretak["orgnrNavn"]] # Lager {'label': 'value'} par for hvert unikt orgnrNavn
