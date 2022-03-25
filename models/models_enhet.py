@@ -244,7 +244,26 @@ def enhet_plot_bar_agg(data, kol_ed, var, grupp, orgnrnavn, n_clicks):
     graph2 = dcc.Graph(id = 'enhet_bar_var', figure = fig2)
     return graph1, graph2, None
 
-
+def offcanvas_innhold(foretak):
+    if foretak:
+        print("Henter metadata og kommentarer til sidebar")
+        metadata = tuple(config_variabler["metadatavariabler"])
+        print(metadata)
+        #df = pd.read_sql(f'SELECT Kommentar FROM {config["tabeller"]["editeringer"]} WHERE ORGNR = {str(foretak)[:9]}', con=engine)
+        df = pd.read_sql(f'SELECT Variabel, {config["perioder"]["t"]["år"]}  AS VERDI FROM {config["tabeller"]["raadata"]} WHERE ORGNR = {str(foretak)[:9]} AND Variabel IN {metadata}', con=engine).drop_duplicates()
+        print(df)
+        data = df.to_dict("rows")
+        columns = [{'name': i, 'id': i} for i in df.columns]
+        print(data)
+        return dt.DataTable(
+                style_as_list_view = True,
+                style_cell = {'textAlign': 'left'},
+                style_data = {
+                    'whiteSpace': 'normal',
+                    'height': 'auto',
+                },
+                data = data,
+                columns = columns), html.P(), html.P("Kan lukkes ved å trykke på Esc")  
 
 def main():
     print("Sett inn tester her")
