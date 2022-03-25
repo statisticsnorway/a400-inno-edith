@@ -22,8 +22,7 @@ from templates.navbar import Navbar
 import json
 with open("config.json") as config:
     config = json.load(config)
-
-print("hei")    
+  
     
 try:
     feilliste_valg = np.insert(pd.read_csv(config['data']['filsti'] + "/feillister_test2.csv", ';')['feilliste'].unique(), 0, 'Alle')

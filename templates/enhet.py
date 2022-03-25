@@ -21,7 +21,7 @@ with open("config.json") as config: # Laster in valg fra config.json
 
 
 nav = Navbar()
-df_opt_var = pd.read_sql(f"SELECT distinct(VARIABEL) FROM {config['tabeller']['raadata']}", con=engine)
+df_opt_var = pd.read_sql(f"SELECT distinct(Variabel) FROM {config['tabeller']['raadata']}", con=engine)
 options_var = [{'label': x, 'value': x} for x in df_opt_var["VARIABEL"].unique()]
 
 df_opt_foretak = pd.read_sql(f"SELECT distinct(orgnrNavn) FROM {config['tabeller']['raadata']}", con=engine) # Henter ut unike orgnrNavn
@@ -87,12 +87,29 @@ body = html.Div(dbc.Container([
 )
 
 
+sidebar = html.Div(
+    dbc.Offcanvas(
+            children = [
+                html.Div(
+                    id = "innhold_offcanvas"
+                ),
+                html.P("Kan lukkes ved å trykke på Esc")
+            ],
+            id="offcanvas",
+            title="Informasjon om foretak",
+            is_open = False,
+            backdrop = False,
+            scrollable = True,
+            placement = "end"
+        )
+)   
 
 
 def Enhet():
     layout = html.Div([
         nav,
-        body
+        body,
+        sidebar
     ])
     return layout
 

@@ -135,6 +135,7 @@ def model_feilliste_figur(enhet_rad, tabelldata,feilliste):
         # Finner variablene i valgt feilliste ---
         feilliste_valgt = feilliste
         print("Feilliste valgt: ", feilliste_valgt)
+
         df_feilliste = pd.read_csv(config['data']['filsti'] + "/feillister_test2.csv", ';')
         df_feilliste['feilliste'] = df_feilliste['feilliste'].str.replace(',', '')
         df_feilliste_valgt = df_feilliste[df_feilliste['feilliste'].isin(feilliste)]
@@ -179,6 +180,7 @@ def model_feilliste_figur(enhet_rad, tabelldata,feilliste):
                      )
         fig1.update_yaxes(matches=None, showticklabels=True)
         fig1.update_layout(bargap=0.2,margin=dict(t=150), title_font_size=30)
+
         fig_feilliste_var = dcc.Graph(id = 'xxx', figure = fig1)
         return fig_feilliste_var
 
@@ -223,6 +225,7 @@ def kontroll_enhetstabell_store(enhet_rad, tabelldata): # Sett inn dette , varia
     print(variabler)
     #df = pd.read_sql(f"SELECT * FROM {config['tabeller']['raadata']} WHERE OrgnrNavn = '{org}'", con=engine)
     df = pd.read_sql(f"SELECT * FROM {config['tabeller']['raadata']} WHERE OrgnrNavn = '{enhet_klikket_orgnrnavn}' AND Variabel IN {variabler}", con=engine)
+
     print(df.head())
     if False is True:# Denne må gjøres conditional på om editeringer eksisterer? 
         df_e = pd.read_sql(f"select * from editeringer WHERE orgnrNavn = '{org}'", con=engine) 
@@ -367,6 +370,7 @@ def oppdater_database(df): # Funksjon for å lagre editering og loggføre bruker
     print("Editering og loggføring lagret") # Bekreftelse i terminalen på at endringen ble skrevet
     
     
+
 def kontroll_offcanvas_innhold(enhet_rad, tabelldata):
     if enhet_rad:
         print("Henter metadata og kommentarer til sidebar")
@@ -385,6 +389,7 @@ def kontroll_offcanvas_innhold(enhet_rad, tabelldata):
         
         #df = pd.read_sql(f'SELECT Kommentar FROM {config["tabeller"]["editeringer"]} WHERE ORGNR = {str(foretak)[:9]}', con=engine)
         df = pd.read_sql(f'SELECT Variabel, {config["perioder"]["t"]["år"]}  AS VERDI FROM {config["tabeller"]["raadata"]} WHERE ORGNR = {str(enhet_klikket)[:9]} AND Variabel IN {metadata}', con=engine).drop_duplicates()
+
         print(df)
         data = df.to_dict("rows")
         columns = [{'name': i, 'id': i} for i in df.columns]
