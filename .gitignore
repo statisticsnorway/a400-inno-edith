@@ -9,3 +9,8 @@
 .ipynb_checkpoints/kake_v3-checkpoint.ipynb
 
 .ipynb_checkpoints/threemap_side2-checkpoint.ipynb
+
+# Ignorerer nye json filer for å redusere støy
+# Ideelt sett skal dette hindre at man får sin egen
+# config fil overskrevet av noen andre sin versjon
+*.json
