@@ -59,8 +59,7 @@ app.config.suppress_callback_exceptions = True
 
 #Autentisering
 VALID_USERNAME_PASSWORD_PAIRS = {
-        'FOU': 'FOU0987',
-        'TEST':'TEST1234'
+        'TEST': 'TEST'
     }
 
 auth = dash_auth.BasicAuth(
@@ -515,5 +514,5 @@ def vis_kontroll_offcanvas_innhold(foretak):
 
 
 if __name__ == '__main__':
-    app.run_server(debug = True, port=7878)
+    app.run_server(debug = True, port=2264)
 
