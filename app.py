@@ -18,7 +18,10 @@ from models.models_logg import logg_tabell
 from templates.homepage import Svarinngang
 from templates.navbar import Navbar
 #from templates.tidsserie import Tidsserie
+#from templates.uvektet import Grid
+
 from templates.grid import Grid
+
 #from templates.vektet import Plots
 from templates.enhet import Enhet
 from templates.logg import Logg
