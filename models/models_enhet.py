@@ -154,7 +154,14 @@ def oppdater_database(df): # Funksjon for å lagre editering og loggføre bruker
     antall = antall[:-1] # fjerner siste "," så listen blir riktig
     print(kolonner)
     print(antall)
-    
+
+    """ Oppretter editeringer tabell hvis den ikke allerede eksisterer """
+    tabeller = pd.read_sql("SELECT name FROM sqlite_master  WHERE type='table'", con=engine)
+    if "editeringer" not in tabeller["name"].unique():
+        c = conn.cursor()
+        c.execute(f'''CREATE TABLE {config["tabeller"]["editeringer"]}({kolonner})''')
+        conn.commit()
+
     """ Setter inn i editeringer tabellen """
     sqlite_insert_query = f"""INSERT INTO editeringer
             ({kolonner})
