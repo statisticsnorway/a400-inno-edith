@@ -37,7 +37,7 @@
     },
     "endringsvariabler": "str_cols i update_table",
     "data":{
-        "filsti": "/home/acd@ssb.no/db_edith"
+        "filsti": "/home/db"
     },
     "tabeller":{
         "raadata": "raadata",
