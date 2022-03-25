@@ -56,7 +56,7 @@ app.config.suppress_callback_exceptions = True
 
 #Autentisering
 VALID_USERNAME_PASSWORD_PAIRS = {
-        'TEST': 'TEST'
+        'TEMP': 'TEMP'
     }
 
 auth = dash_auth.BasicAuth(
