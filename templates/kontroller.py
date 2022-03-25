@@ -22,9 +22,13 @@ from templates.navbar import Navbar
 import json
 with open("config.json") as config:
     config = json.load(config)
+  
+    
+try:
+    feilliste_valg = np.insert(pd.read_csv(config['data']['filsti'] + "/feillister_test2.csv", ';')['feilliste'].unique(), 0, 'Alle')
+except:
+    feilliste_valg = ["Ingen feillister tilgjengelig"]
 
-#feilliste_valg = np.insert(pd.read_csv('/ssb/stamme04/inno400/edith/feillister_test2.csv',';')['feilliste'].unique(), 0, 'Alle')
-feilliste_valg = np.insert(pd.read_csv(config['data']['filsti'] + "/feillister_test2.csv", ';')['feilliste'].unique(), 0, 'Alle')
 feilliste_valg = [item.replace(',', '') for item in feilliste_valg]
 options_grupp = [{'label': x, 'value': x} for x in feilliste_valg]
 
@@ -61,17 +65,17 @@ body = dbc.Container([
         )
     ]),
 
-    dbc.Row([
-        dbc.Col(
-            dcc.Dropdown(
-                id = 'dropdown_enhet',
-                multi = False,
-                options = options_enhet,
-                placeholder = "Velg orgnr.",
-                #className = "dropdownmeny"
-            )
-        , width = 5)
-    ]),
+  #  dbc.Row([
+  #      dbc.Col(
+  #          dcc.Dropdown(
+  #              id = 'dropdown_enhet',
+  #              multi = False,
+  #              options = options_enhet,
+  #              placeholder = "Velg orgnr.",
+  #              #className = "dropdownmeny"
+  #          )
+  #      , width = 5)
+  #  ]),
 
     dbc.Row([dbc.Col(html.Div(id = 'figur_feilliste_vars'), width=12)]),
     

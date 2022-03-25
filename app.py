@@ -18,10 +18,7 @@ from models.models_kontroller import feilliste_tabell, innhent_feilliste, oppdat
 from templates.homepage import Svarinngang
 from templates.navbar import Navbar
 #from templates.tidsserie import Tidsserie
-#from templates.uvektet import Grid
-
 from templates.grid import Grid
-
 #from templates.vektet import Plots
 from templates.enhet import Enhet
 from templates.logg import Logg
@@ -59,7 +56,7 @@ app.config.suppress_callback_exceptions = True
 
 #Autentisering
 VALID_USERNAME_PASSWORD_PAIRS = {
-        'TEST': 'TEST'
+        'TEMP': 'TEMP'
     }
 
 auth = dash_auth.BasicAuth(
@@ -461,7 +458,32 @@ def show_feilliste_figur(enhet_rad, tabelldata, feilliste):
 
 
 #Tabell for enhet på kontroll-side
+@app.callback(Output('kontroll_tabell_enhet', 'data'),
+              [
+                  Input('feilliste_tabell_endret', 'active_cell'),
+                  Input('feilliste_tabell_endret', 'derived_virtual_data')
+              ])
+def kontroll_enhetsdata_clb(enhet_rad, tabelldata):
+    return kontroll_enhetstabell_store(enhet_rad, tabelldata)
 
+
+
+@app.callback(Output('kontroll_enhet_tabell_div', 'children'),
+              [
+                  Input('feilliste_tabell_endret', 'active_cell'),
+                  Input('kontroll_tabell_enhet', 'data')
+              ])
+def kontroll_enhetstabell_clb(enhet_rad, data):
+    #print(dash.callback_context.inputs_list)
+    return kontroll_enhetstabell(enhet_rad, data)
+
+
+
+
+
+'''
+#### De med dropdown
+#Tabell for enhet på kontroll-side
 @app.callback(Output('kontroll_tabell_enhet', 'data'),
               [
                   Input('dropdown_enhet', 'value'),
@@ -475,6 +497,9 @@ def kontroll_enhetsdata_clb(org):
 def kontroll_enhetstabell_clb(n_clicks, data):
     #print(dash.callback_context.inputs_list)
     return kontroll_enhetstabell(n_clicks, data)
+'''
+
+
 
 @app.callback(
     [Output('kontroll_enhet_tabell', 'data')],
@@ -501,6 +526,19 @@ def toggle_offcanvas(n1, is_open):
         return not is_open
     return is_open
 
+
+@app.callback(
+    Output("kontroll_offcanvas", "children"),
+    [
+        Input('feilliste_tabell_endret', 'active_cell'),
+        Input('feilliste_tabell_endret', 'derived_virtual_data')
+    ])
+def vis_kontroll_offcanvas_innhold(enhet_rad, tabelldata):
+    print(dash.callback_context.inputs_list)
+    return kontroll_offcanvas_innhold(enhet_rad, tabelldata)
+
+
+'''
 @app.callback(
     Output("kontroll_offcanvas", "children"),
     [
@@ -510,9 +548,10 @@ def toggle_offcanvas(n1, is_open):
 def vis_kontroll_offcanvas_innhold(foretak):
     print(dash.callback_context.inputs_list)
     return kontroll_offcanvas_innhold(foretak)
+'''
 
 
 
 if __name__ == '__main__':
-    app.run_server(debug = True, port=2264)
+    app.run_server(debug = True, port=7878)
 
