@@ -221,19 +221,29 @@ def enhet_plot_bar_agg(data, kol_ed, var, grupp, orgnrnavn, n_clicks):
     """ Laster inn data """
     if len(var) == 1:
         grupp_var = pd.read_sql(f"SELECT {grupp} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and VARIABEL = '{var[0]}'", con=engine).loc[0,grupp]
-        df_grupp = pd.read_sql(f"SELECT VARIABEL, SUM({t_2}) {t_2}, SUM({t_1}) {t_1}, SUM({t}) {t}, {grupp} FROM {config['tabeller']['raadata']} WHERE {grupp} = '{grupp_var}' and VARIABEL = '{var[0]}' and OrgnrNavn NOT IN ('{orgnrnavn}') GROUP BY VARIABEL", con=engine)
+        spørring = f"SELECT VARIABEL, "
+        for i in config["perioder"]:
+            spørring += f"SUM({i}), "
+            spørring += f"{i}, "
+        spørring += f"{grupp} FROM {config['tabeller']['raadata']} WHERE {grupp} = '{grupp_var}' and VARIABEL = '{var[0]}' and OrgnrNavn NOT IN ('{orgnrnavn}') GROUP BY VARIABEL"
+        df_grupp = pd.read_sql(spørring, con = engine)
     else: # Hvis var er mer enn ett element må det skrives som en tuple i SQL spørringen
         grupp_var = pd.read_sql(f"SELECT {grupp} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and VARIABEL IN {tuple(var)}", con=engine).loc[0,grupp]
-        df_grupp = pd.read_sql(f"SELECT VARIABEL, SUM({t_2}) {t_2}, SUM({t_1}) {t_1}, SUM({t}) {t}, {grupp} FROM {config['tabeller']['raadata']} WHERE {grupp} = '{grupp_var}' and VARIABEL IN {tuple(var)} and OrgnrNavn NOT IN ('{orgnrnavn}') GROUP BY VARIABEL", con=engine)
+        spørring = f"SELECT VARIABEL, "
+        for i in config["perioder"]:
+            spørring += f"SUM({i}), "
+            spørring += f"{i}, "
+        spørring += f"{grupp} FROM {config['tabeller']['raadata']} WHERE {grupp} = '{grupp_var}' and VARIABEL IN {tuple(var)} and OrgnrNavn NOT IN ('{orgnrnavn}') GROUP BY VARIABEL"
+        df_grupp = pd.read_sql(spørring, con = engine)
     df = pd.DataFrame().from_dict(data)
     """ Tilpasser data for visualisering """
     df["Enhet"] = df["Navn"]
     df_grupp["Enhet"] = "Andre"
     kolonner = ["Enhet", "VARIABEL", t_2, t_1, t]
     if n_clicks:
-        if code["perioder"][0]["t"][0]["år"] + "_editert" in df.columns:
-            kolonner = kolonner+[code["perioder"][0]["t"][0]["år"] + "_editert"]
-            df_grupp[code["perioder"][0]["t"][0]["år"] + "_editert"] = df_grupp[t]
+        if config["perioder"]["t"]["år"] + "_editert" in df.columns:
+            kolonner = kolonner+[config["perioder"]["t"]["år"] + "_editert"]
+            df_grupp[config["perioder"]["t"]["år"] + "_editert"] = df_grupp[t]
     df = df[kolonner]
     df_grupp = df_grupp[kolonner]
     df1 = df.melt(id_vars=["VARIABEL", "Enhet"], var_name="År", value_name="value")
