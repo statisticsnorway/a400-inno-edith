@@ -15,12 +15,12 @@ Oppskrift: xxx
        - Inneholder hardkodet brukernavn og passord. Default (TEMP - TEMP)
        - Sjekk port for kjøring (aller nederste linje i fil. Velg en port du har lagt til i putty)
 
-3) Kjør oppretting_database.ipynb for å etablere datagrunnlag (tabell raadata) 
+3) Kjør oppretting_database_raadata.ipynb for å etablere datagrunnlag (tabell raadata) 
     - OBS! Endre til riktig Oracle-brukernavn i celle 5
     - Velg "Cell" - "Run all"
     - OBS! Skal felt_id-variabelen fra DYNAREV hete noe annet? I default-oppsett er dette endret til VARIABEL (<i>FELT_ID as VARIABEL i celle 8 </i> ) . Ved endring til et annet navn kreves også endringer i templates-, og models-filer. 
 
-4) Kjør oppdatering_svarinngang.ipynb for å etablere tabell for svarinngang 
+4) Kjør opprett_tabell_svarinngang.ipynb for å etablere tabell for svarinngang 
    - OBS! Endre til riktig Oracle-brukernavn i celle 3
    - Velg "Cell" - "Run all"
    
