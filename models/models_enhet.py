@@ -21,6 +21,9 @@ import plotly.express as px
 with open("config.json") as config:
     config = json.load(config)
 
+with open("variabler.json") as config_variabler:
+    config_variabler = json.load(config_variabler)
+
 
 
 def enhetstabell_store(org): # Sett inn dette , variabel
@@ -43,16 +46,15 @@ def enhetstabell1(n_clicks, data, var):
         perioder[i] = config["perioder"][i]["år"] # Må kanskje finne en litt annen måte å gjøre det på hvis kobling av perioder skal skje i funksjonen
     if n_clicks:
         df = pd.DataFrame().from_dict(data)
-        print(df.head())
         df = df[[config["id_variabel"], config["navn_variabel"], "VARIABEL"] + list(perioder.values())]
-        try:
-            if config["brukernavn"] != "":
-                df["Editert_av"] = config["brukernavn"]
-        except:
+        df["Editert_av"] = "Skriv brukernavn" # Dette er en default, den overskrives om noen av sjekkene for brukernavn nedenfor finner noe annet
+        if config["brukernavn"] != "":
+            df["Editert_av"] = config["brukernavn"]
+        else:
             try:
                 df["Editert_av"] = request.authorization["username"]
             except:
-                df["Editert_av"] = ""
+                print("Finner ikke brukernavn, setter inn midlertidig verdi")            
         df["Kommentar"] = ""
         df = df[df['VARIABEL'].isin(var)]
         data = df.to_dict('rows')
