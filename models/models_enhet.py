@@ -45,7 +45,14 @@ def enhetstabell1(n_clicks, data, var):
         df = pd.DataFrame().from_dict(data)
         print(df.head())
         df = df[[config["id_variabel"], config["navn_variabel"], "VARIABEL"] + list(perioder.values())]
-        df["Editert_av"] = request.authorization["username"]
+        try:
+            if config["brukernavn"] != "":
+                df["Editert_av"] = config["brukernavn"]
+        except:
+            try:
+                df["Editert_av"] = request.authorization["username"]
+            except:
+                df["Editert_av"] = ""
         df["Kommentar"] = ""
         df = df[df['VARIABEL'].isin(var)]
         data = df.to_dict('rows')
