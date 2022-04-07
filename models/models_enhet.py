@@ -120,7 +120,7 @@ def update_columns(n_clicks, data, value, columns):
         data = df.to_dict('rows')
         print(df.columns)
         columns = [{'name': i, 'id': i, 'on_change': {'action': 'validate'}, 'selectable': True} if i in set([config["perioder"]["t"]["år"], 'Vekt']) 
-            else {'name': i, 'id': i, 'editable': True} if i == "Kommentar" # Gjør at man kan editere i kommentar kolonnen.
+            else {'name': i, 'id': i, 'editable': True} if i == "Kommentar" or i == "Editert_av" # Gjør at man kan editere i kommentar og editert_av kolonnene.
             else {'name': i, 'id': i} for i in df.columns] # Legger inn øvrige kolonner
         print("Update_columns avsluttes")
         return data, columns, None # Returnerer None til knappen, slik at du må faktisk trykke på knappen igjen for at denne funksjonen skal kunne utløses igjen.
