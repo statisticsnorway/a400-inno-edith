@@ -243,12 +243,15 @@ def enhet_plot_bar_agg(data, kol_ed, var, grupp, orgnrnavn, n_clicks):
     if n_clicks:
         if config["perioder"]["t"]["år"] + "_editert" in df.columns:
             kolonner = kolonner+[config["perioder"]["t"]["år"] + "_editert"]
-            df_grupp[config["perioder"]["t"]["år"] + "_editert"] = df_grupp[t]
+            df_grupp[config["perioder"]["t"]["år"] + "_editert"] = df_grupp[config["perioder"]["t"]["år"]]
     df = df[kolonner]
     df_grupp = df_grupp[kolonner]
     df1 = df.melt(id_vars=["VARIABEL", "Enhet"], var_name="År", value_name="value")
     df2 = df_grupp.melt(id_vars=["VARIABEL", "Enhet"], var_name="År", value_name="value")
     df_merge = pd.concat([df1, df2])
+    df1["value"] = df1["value"].astype(float)
+    df2["value"] = df2["value"].astype(float)
+    df_merge["value"] = df_merge["value"].astype(float)
 
     """ Lager figurer """
     fig1 = px.bar(df1, x="År", y="value", barmode = "group", title="Utvikling over tid", facet_col="VARIABEL", category_orders={"VARIABEL": var},facet_col_spacing=0.04, facet_row_spacing=0.04)
