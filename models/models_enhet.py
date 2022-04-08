@@ -28,12 +28,17 @@ with open("variabler.json") as config_variabler:
 
 def enhetstabell_store(org): # Sett inn dette , variabel
     print("Laster inn data")
-    df = pd.read_sql(f"SELECT * FROM {config['tabeller']['raadata']} WHERE OrgnrNavn = '{org}'", con=engine)
-    if False is True:# Denne må gjøres conditional på om editeringer eksisterer? 
-        df_e = pd.read_sql(f"select * from editeringer WHERE orgnrNavn = '{org}'", con=engine) 
-        df = pd.concat([df, df_e])
+    df = pd.read_sql(f"SELECT * FROM raadata WHERE OrgnrNavn = '{org}'", con=engine)
+    try:
+        df_e = pd.read_sql(f"select * from editeringer WHERE orgnrNavn = '{org}'", con=engine)
+        editeringer = True
+    except:
+        editeringer = False
+        print("Ingen endringer er loggført")
+    if editeringer != False:
+        df = pd.concat([df, df_e], ignore_index = True)
         df = df.sort_values(by="Log_tid", ascending=False)
-        df = df.drop_duplicates(subset=["VARIABEL", "OrgnrNavn"], keep="first")
+        df = df.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")
     data = df.to_dict('rows')
     columns = [{'name': i, 'id': i} for i in df.columns]
     return data #table(id = 'table3', data = data, columns = columns)
@@ -150,9 +155,14 @@ def oppdater_database(df): # Funksjon for å lagre editering og loggføre bruker
     print(data_som_endres)
     
     """ Lager strings for SQL insert slik at det blir riktige kolonnenavn og riktig antall kolonner """
-    # Midlertidig start
-    del data_som_endres["index"]
-    # Midlertidig slutt
+    try:
+        del data_som_endres["index"] # Midlertidig feilhåndtering, burde kunne fjernes
+    except:
+        print("Feilsjekk 1 gjorde ingenting")
+    try:
+        del data_som_endres["level_0"] # Midlertidig feilhåndtering, burde kunne fjernes
+    except:
+        print("Feilsjekk 2 gjorde ingenting")
     kolonner = ""
     for i in data_som_endres.columns: # Finnes sikkert en bedre løsning enn dette
         kolonner = kolonner + str(i) + str(", ")
