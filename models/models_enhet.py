@@ -211,7 +211,7 @@ def enhet_plot(orgnrnavn, n_clicks): # Nøkkeltall
     perioder = perioder[:-2] # fjerner siste ", " så listen blir riktig
     if n_clicks:
         variabler = config["nøkkeltall_enhetssiden"]
-        df = pd.read_sql(f"SELECT VARIABEL, {perioder} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and VARIABEL in {tuple(variabler)}", con=engine)
+        df = pd.read_sql(f"SELECT VARIABEL, {perioder} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and VARIABEL in {tuple(variabler)}", con=engine) # Må skrives om til å hente editerte tall
         # Start - midlertidig fiks på feil datatype i kolonne. Fjernes når kolonner har riktig verdi i sqlite
         perioder = []
         for i in config["perioder"]:
