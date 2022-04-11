@@ -17,6 +17,8 @@ from flask import request # for brukernavn
 
 import plotly.express as px
 
+import getpass
+
 
 with open("config.json") as config:
     config = json.load(config)
@@ -55,11 +57,19 @@ def enhetstabell1(n_clicks, data, var):
         df["Editert_av"] = "Skriv brukernavn" # Dette er en default, den overskrives om noen av sjekkene for brukernavn nedenfor finner noe annet
         if config["brukernavn"] != "":
             df["Editert_av"] = config["brukernavn"]
+            print("a")
         else:
             try:
-                df["Editert_av"] = request.authorization["username"]
+                print("b")
+                df["Editert_av"] = getpass.getuser()
             except:
-                print("Finner ikke brukernavn, setter inn midlertidig verdi")            
+                print("c")
+                try:
+                    print("d")
+                    df["Editert_av"] = request.authorization["username"]
+                except:
+                    print("e")
+                    print("Finner ikke brukernavn, setter inn midlertidig verdi")    
         df["Kommentar"] = ""
         df = df[df['VARIABEL'].isin(var)]
         data = df.to_dict('rows')
