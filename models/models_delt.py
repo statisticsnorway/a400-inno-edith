@@ -92,6 +92,9 @@ def table(id, data, columns, filterable=True, column_selectable=False):
     return tabell
 
 def main():
+    import pandas as pd
+    conn, engine, db = connect()
+    print(pd.read_sql(f"select * from {code['tabeller']['raadata']}", con = engine).head())
     print("Sett inn tester her")
 
 if __name__ == "__main__":

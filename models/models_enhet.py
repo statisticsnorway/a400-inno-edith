@@ -17,20 +17,30 @@ from flask import request # for brukernavn
 
 import plotly.express as px
 
+import getpass
+
 
 with open("config.json") as config:
     config = json.load(config)
+
+with open("variabler.json") as config_variabler:
+    config_variabler = json.load(config_variabler)
 
 
 
 def enhetstabell_store(org): # Sett inn dette , variabel
     print("Laster inn data")
-    df = pd.read_sql(f"SELECT * FROM {config['tabeller']['raadata']} WHERE OrgnrNavn = '{org}'", con=engine)
-    if False is True:# Denne må gjøres conditional på om editeringer eksisterer? 
-        df_e = pd.read_sql(f"select * from editeringer WHERE orgnrNavn = '{org}'", con=engine) 
-        df = pd.concat([df, df_e])
-        df = df.sort_values(by="Log_tid", ascending=False)
-        df = df.drop_duplicates(subset=["VARIABEL", "OrgnrNavn"], keep="first")
+    df = pd.read_sql(f"SELECT * FROM raadata WHERE OrgnrNavn = '{org}'", con=engine)
+#    try: # Denne koden skal slå sammen editeringer med rådata, men det fungerer ikke enda. Må testes mer.
+#        df_e = pd.read_sql(f"select * from editeringer WHERE orgnrNavn = '{org}'", con=engine)
+#        editeringer = True
+#    except:
+#        editeringer = False
+#        print("Ingen endringer er loggført")
+#    if editeringer != False:
+#        df = pd.concat([df, df_e], ignore_index = True)
+#        df = df.sort_values(by="Log_tid", ascending=False)
+#        df = df.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")
     data = df.to_dict('rows')
     columns = [{'name': i, 'id': i} for i in df.columns]
     return data #table(id = 'table3', data = data, columns = columns)
@@ -43,9 +53,23 @@ def enhetstabell1(n_clicks, data, var):
         perioder[i] = config["perioder"][i]["år"] # Må kanskje finne en litt annen måte å gjøre det på hvis kobling av perioder skal skje i funksjonen
     if n_clicks:
         df = pd.DataFrame().from_dict(data)
-        print(df.head())
         df = df[[config["id_variabel"], config["navn_variabel"], "VARIABEL"] + list(perioder.values())]
-        df["Editert_av"] = request.authorization["username"]
+        df["Editert_av"] = "Skriv brukernavn" # Dette er en default, den overskrives om noen av sjekkene for brukernavn nedenfor finner noe annet
+        if config["brukernavn"] != "":
+            df["Editert_av"] = config["brukernavn"]
+            print("a")
+        else:
+            try:
+                print("b")
+                df["Editert_av"] = getpass.getuser()
+            except:
+                print("c")
+                try:
+                    print("d")
+                    df["Editert_av"] = request.authorization["username"]
+                except:
+                    print("e")
+                    print("Finner ikke brukernavn, setter inn midlertidig verdi")    
         df["Kommentar"] = ""
         df = df[df['VARIABEL'].isin(var)]
         data = df.to_dict('rows')
@@ -111,7 +135,7 @@ def update_columns(n_clicks, data, value, columns):
         data = df.to_dict('rows')
         print(df.columns)
         columns = [{'name': i, 'id': i, 'on_change': {'action': 'validate'}, 'selectable': True} if i in set([config["perioder"]["t"]["år"], 'Vekt']) 
-            else {'name': i, 'id': i, 'editable': True} if i == "Kommentar" # Gjør at man kan editere i kommentar kolonnen.
+            else {'name': i, 'id': i, 'editable': True} if i == "Kommentar" or i == "Editert_av" # Gjør at man kan editere i kommentar og editert_av kolonnene.
             else {'name': i, 'id': i} for i in df.columns] # Legger inn øvrige kolonner
         print("Update_columns avsluttes")
         return data, columns, None # Returnerer None til knappen, slik at du må faktisk trykke på knappen igjen for at denne funksjonen skal kunne utløses igjen.
@@ -141,9 +165,14 @@ def oppdater_database(df): # Funksjon for å lagre editering og loggføre bruker
     print(data_som_endres)
     
     """ Lager strings for SQL insert slik at det blir riktige kolonnenavn og riktig antall kolonner """
-    # Midlertidig start
-    del data_som_endres["index"]
-    # Midlertidig slutt
+    try:
+        del data_som_endres["index"] # Midlertidig feilhåndtering, burde kunne fjernes
+    except:
+        print("Feilsjekk 1 gjorde ingenting")
+    try:
+        del data_som_endres["level_0"] # Midlertidig feilhåndtering, burde kunne fjernes
+    except:
+        print("Feilsjekk 2 gjorde ingenting")
     kolonner = ""
     for i in data_som_endres.columns: # Finnes sikkert en bedre løsning enn dette
         kolonner = kolonner + str(i) + str(", ")
@@ -182,7 +211,7 @@ def enhet_plot(orgnrnavn, n_clicks): # Nøkkeltall
     perioder = perioder[:-2] # fjerner siste ", " så listen blir riktig
     if n_clicks:
         variabler = config["nøkkeltall_enhetssiden"]
-        df = pd.read_sql(f"SELECT VARIABEL, {perioder} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and VARIABEL in {tuple(variabler)}", con=engine)
+        df = pd.read_sql(f"SELECT VARIABEL, {perioder} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and VARIABEL in {tuple(variabler)}", con=engine) # Må skrives om til å hente editerte tall
         # Start - midlertidig fiks på feil datatype i kolonne. Fjernes når kolonner har riktig verdi i sqlite
         perioder = []
         for i in config["perioder"]:
