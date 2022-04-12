@@ -215,30 +215,43 @@ def enhet_plot(orgnrnavn, n_clicks): # Nøkkeltall
 
 def enhet_plot_bar_agg(data, kol_ed, var, grupp, orgnrnavn, n_clicks):
     print("Starter av enhet_plot_bar_agg")
-    temp_dict = {}
+    perioder = {}
     for i in config["perioder"]: # Finnes sikkert en bedre løsning enn dette
-        temp_dict[i] = config["perioder"][i]["år"] # Må kanskje finne en litt annen måte å gjøre det på hvis kobling av perioder skal skje i funksjonen
+        perioder[i] = config["perioder"][i]["år"] # Må kanskje finne en litt annen måte å gjøre det på hvis kobling av perioder skal skje i funksjonen
     """ Laster inn data """
     if len(var) == 1:
         grupp_var = pd.read_sql(f"SELECT {grupp} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and VARIABEL = '{var[0]}'", con=engine).loc[0,grupp]
-        df_grupp = pd.read_sql(f"SELECT VARIABEL, SUM({t_2}) {t_2}, SUM({t_1}) {t_1}, SUM({t}) {t}, {grupp} FROM {config['tabeller']['raadata']} WHERE {grupp} = '{grupp_var}' and VARIABEL = '{var[0]}' and OrgnrNavn NOT IN ('{orgnrnavn}') GROUP BY VARIABEL", con=engine)
+        spørring = f"SELECT VARIABEL, "
+        for i in config["perioder"]:
+            spørring += f"SUM({config['perioder'][i]['år']}), "
+            spørring += f"{config['perioder'][i]['år']}, "
+        spørring += f"{grupp} FROM {config['tabeller']['raadata']} WHERE {grupp} = '{grupp_var}' and VARIABEL = '{var[0]}' and OrgnrNavn NOT IN ('{orgnrnavn}') GROUP BY VARIABEL"
+        df_grupp = pd.read_sql(spørring, con = engine)
     else: # Hvis var er mer enn ett element må det skrives som en tuple i SQL spørringen
         grupp_var = pd.read_sql(f"SELECT {grupp} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and VARIABEL IN {tuple(var)}", con=engine).loc[0,grupp]
-        df_grupp = pd.read_sql(f"SELECT VARIABEL, SUM({t_2}) {t_2}, SUM({t_1}) {t_1}, SUM({t}) {t}, {grupp} FROM {config['tabeller']['raadata']} WHERE {grupp} = '{grupp_var}' and VARIABEL IN {tuple(var)} and OrgnrNavn NOT IN ('{orgnrnavn}') GROUP BY VARIABEL", con=engine)
+        spørring = f"SELECT VARIABEL, "
+        for i in config["perioder"]:
+            spørring += f"SUM({config['perioder'][i]['år']}), "
+            spørring += f"{config['perioder'][i]['år']}, "
+        spørring += f"{grupp} FROM {config['tabeller']['raadata']} WHERE {grupp} = '{grupp_var}' and VARIABEL IN {tuple(var)} and OrgnrNavn NOT IN ('{orgnrnavn}') GROUP BY VARIABEL"
+        df_grupp = pd.read_sql(spørring, con = engine)
     df = pd.DataFrame().from_dict(data)
     """ Tilpasser data for visualisering """
-    df["Enhet"] = df["Navn"]
+    df["Enhet"] = df["NAVN"]
     df_grupp["Enhet"] = "Andre"
-    kolonner = ["Enhet", "VARIABEL", t_2, t_1, t]
+    kolonner = ["Enhet", "VARIABEL"] + list(perioder.values())
     if n_clicks:
-        if code["perioder"][0]["t"][0]["år"] + "_editert" in df.columns:
-            kolonner = kolonner+[code["perioder"][0]["t"][0]["år"] + "_editert"]
-            df_grupp[code["perioder"][0]["t"][0]["år"] + "_editert"] = df_grupp[t]
+        if config["perioder"]["t"]["år"] + "_editert" in df.columns:
+            kolonner = kolonner+[config["perioder"]["t"]["år"] + "_editert"]
+            df_grupp[config["perioder"]["t"]["år"] + "_editert"] = df_grupp[config["perioder"]["t"]["år"]]
     df = df[kolonner]
     df_grupp = df_grupp[kolonner]
     df1 = df.melt(id_vars=["VARIABEL", "Enhet"], var_name="År", value_name="value")
     df2 = df_grupp.melt(id_vars=["VARIABEL", "Enhet"], var_name="År", value_name="value")
     df_merge = pd.concat([df1, df2])
+    df1["value"] = df1["value"].astype(float)
+    df2["value"] = df2["value"].astype(float)
+    df_merge["value"] = df_merge["value"].astype(float)
 
     """ Lager figurer """
     fig1 = px.bar(df1, x="År", y="value", barmode = "group", title="Utvikling over tid", facet_col="VARIABEL", category_orders={"VARIABEL": var},facet_col_spacing=0.04, facet_row_spacing=0.04)
