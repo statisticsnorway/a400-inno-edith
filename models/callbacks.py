@@ -46,6 +46,24 @@ from datetime import timedelta
 import json
 
 def get_callbacks(app):
+    # Sidenavigasjon, fungerer sammen med templates/navbar.py
+    @app.callback(Output('page-content', 'children'),
+                [Input('url', 'pathname')])
+    def display_page(pathname):
+        if pathname == '/plots':
+            return Plots()
+        elif pathname == '/grid':
+            return Grid()
+        elif pathname == '/tidsserie':
+            return Tidsserie()
+        elif pathname == '/enhet':
+            return Enhet()
+        elif pathname == '/logg':
+            return Logg()
+        elif pathname == '/kontroller':
+            return Kontroller()
+        else:
+            return Svarinngang()
     ##############################################
     # Eksperimentell, sammenligne editert/ueditert.
     # Ligger på svarinngang siden foreløpig, kan lett flyttes
