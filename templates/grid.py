@@ -76,22 +76,24 @@ body = html.Div([dbc.Container([
                     dbc.Tab([
                         dbc.Row(html.Div(id = "scatterplot_div_grid")),
                         dbc.Row([
-                            dbc.Col(
+                            dbc.Col([
+                                "X-variabel",
                                 dcc.Dropdown(
                                     id = 'x_scatter_grid',
                                     options = options_var,
                                     placeholder = "Velg x variabel",
                                     className="egendropdown"
                                 )
-                            ),
-                            dbc.Col(
+                            ]),
+                            dbc.Col([
+                                "Y-variabel",
                                 dcc.Dropdown(
                                     id = 'y_scatter_grid',
                                     options = options_var,
                                     placeholder = "Velg y variabel",
                                     className="egendropdown"
                                 )
-                            ),
+                            ]),
                             dbc.Col(
                                 dcc.Checklist(
                                     id = "checklist_scatter_grid",

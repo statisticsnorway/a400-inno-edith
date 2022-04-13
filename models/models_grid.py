@@ -124,6 +124,9 @@ def scatterplot_grid(x, y, checklist, aggregat, clickData):
             df = df.loc[df[x] > 0]
             df = df.loc[df[y] > 0]
     fig = px.scatter(df,x = x,y = y, hover_name = df.index, trendline="ols")
+    fig.update_layout(
+        title = f"Forholdet mellom {x} og {y}"
+    )
     return dcc.Graph(id = "scatter_grid",figure=fig)
 
 
