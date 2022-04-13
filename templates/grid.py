@@ -105,22 +105,24 @@ body = html.Div([dbc.Container([
                     dbc.Tab([
                         dbc.Row(html.Div(id = "histogram_div_grid")),
                         dbc.Row([
-                            dbc.Col(
+                            dbc.Col([
+                                "Variabel til histogram",
                                 dcc.Dropdown(
                                     id = "variabel_histogram_grid",
                                     options = options_var,
                                     placeholder = "Velg variabel",
                                     className = "egendropdown"
                                 )
-                            ),
-                            dbc.Col(
+                            ]),
+                            dbc.Col([
+                                "Velg antall bins til histogrammet",
                                 dcc.Input(
                                     id="bins_histogram_grid",
                                     type="number",
-                                    placeholder="Sett inn grenseverdi",
+                                    placeholder="Velg antall bins",
                                     value = 10
                                 )
-                            ),
+                            ]),
                             dbc.Col(
                                 dcc.Checklist(
                                     id = "checklist_histogram_grid",

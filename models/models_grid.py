@@ -161,7 +161,11 @@ def histogram_grid(variabel, bins, checklist, aggregat, clickData):
             nbinsx = bins,
             name = config["perioder"][i]["år"]
         ))
-    fig.update_layout(barmode = "group")
+    fig.update_layout(
+        xaxis_title = f"Verdi på {variabel}",
+        yaxis_title = "Antall enheter med verdien",
+        barmode = "group"
+    )
     return dcc.Graph(id = "histogram_grid", figure = fig)
 
 
