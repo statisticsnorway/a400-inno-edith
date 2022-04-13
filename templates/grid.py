@@ -42,7 +42,9 @@ body = html.Div([dbc.Container([
         )
     ]),
     dbc.Row([
-        dbc.Col(
+        dbc.Col([
+            html.Span("Velg aggregering", id = "aggregat_tekst_grid", style={"textDecoration": "underline", "cursor": "pointer"}),
+            dbc.Tooltip('Her velger du hvilke aggregater dataene skal grupperes etter. Du kan velge flere alternativer, og de grupperes i rekkefølgen du velger. Alternativene dine her er basert på det som står i config under "aggregater"', target = "aggregat_tekst_grid"),
             dcc.Dropdown(
                 id = 'grupp',
                 multi = True,
@@ -50,8 +52,10 @@ body = html.Div([dbc.Container([
                 value = [config["default-valg"]["grid"]["gruppering"]],
                 placeholder = "Velg gruppering"
             )
-        , width = 3),
-        dbc.Col(
+        ], width = 3),
+        dbc.Col([
+            html.Span("Velg variabel/variabler", id = "variabel_tekst_grid", style={"textDecoration": "underline", "cursor": "pointer"}),
+            dbc.Tooltip('Her velger du hvilke variabler som skal inkluderes. Du kan velge flere variabler, men kun den første variabelen vises i treemap figuren.', target = "variabel_tekst_grid"),
             dcc.Dropdown(
                 id = 'var',
                 multi = True,
@@ -59,7 +63,7 @@ body = html.Div([dbc.Container([
                 value = [config["default-valg"]["grid"]["variabel"]],
                 placeholder = "Velg variabler"
             )
-        , width = 3),
+        ], width = 3),
         dbc.Col(
             dbc.ButtonGroup(
                 [
