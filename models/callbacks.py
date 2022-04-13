@@ -193,13 +193,13 @@ def get_callbacks(app):
 
     @app.callback(Output('boxplot_div_grid', 'children'),
                   [Input('variabel_boxplot_grid', 'value'),
-                  Input('boxpoints_boxplot_grid', 'value'),
+                  #Input('boxpoints_boxplot_grid', 'value'), # Tas ut av funksjonen
                   Input('checklist_boxplot_grid', 'value'),
                   Input('grupp', 'value'),
                   Input('treemap', 'clickData')])
-    def boxplot_grid_fig(variabel, boxpoints, checklist, aggregat, clickData):
+    def boxplot_grid_fig(variabel, checklist, aggregat, clickData): # Tatt ut av listen: boxpoints, 
         print("Boxplot grid")
-        return boxplot_grid(variabel, boxpoints, checklist, aggregat, clickData)
+        return boxplot_grid(variabel, checklist, aggregat, clickData) # Tatt ut av listen: boxpoints, 
 
     @app.callback(Output("sammenligning", "children"),
                   Input("slider", "value"))

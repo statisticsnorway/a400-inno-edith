@@ -143,18 +143,18 @@ body = html.Div([dbc.Container([
                                     className = "egendropdown"
                                 )
                             ),
-                            dbc.Col(
-                                dcc.Dropdown(
-                                    id = "boxpoints_boxplot_grid",
-                                    options = [
-                                        {"label": "Alle", "value": "all"},
-                                        {"label": "utliggere", "value": "outliers"},
-                                        {"label": "Suspected outliers", "value": "suspectedoutliers"}
-                                    ],
-                                    value = "all",
-                                    className = "egendropdown"
-                                )
-                            ),
+#                            dbc.Col( # Dropdown for outliers, foreløpig fungerer den ikke så den kommenteres ut
+#                                dcc.Dropdown(
+#                                    id = "boxpoints_boxplot_grid",
+#                                    options = [
+#                                        {"label": "Alle", "value": "all"},
+#                                        {"label": "utliggere", "value": "outliers"},
+#                                        {"label": "Suspected outliers", "value": "suspectedoutliers"}
+#                                    ],
+#                                    value = "all",
+#                                    className = "egendropdown"
+#                                )
+#                            ),
                             dbc.Col(
                                 dcc.Checklist(
                                     id = "checklist_boxplot_grid",

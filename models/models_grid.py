@@ -166,7 +166,8 @@ def histogram_grid(variabel, bins, checklist, aggregat, clickData):
 
 
 
-def boxplot_grid(variabel, boxpoints, checklist, aggregat, clickData):
+def boxplot_grid(variabel, checklist, aggregat, clickData): # Tatt ut av listen: boxpoints, 
+    print("Laster data til boxplot grid")
     tilpasning_til_spørring = ""
     variabel_filter = f"WHERE VARIABEL = '{variabel}' "
     tilpasning_til_spørring = tilpasning_til_spørring + variabel_filter
@@ -184,18 +185,19 @@ def boxplot_grid(variabel, boxpoints, checklist, aggregat, clickData):
             tilpasning_til_spørring = tilpasning_til_spørring + aggregering_filter
     spørring = f"SELECT * FROM {config['tabeller']['raadata']} " + tilpasning_til_spørring
     df = pd.read_sql(spørring, con = engine)
-
+    print("Bearbeider data for boxplot grid")
     for i in config["perioder"]:
         df[config["perioder"][i]["år"]] = df[config["perioder"][i]["år"]].astype(float)
     if checklist != None: # Checklist starter som None
         if len(checklist) != 0: # Hvis man har krysset av er lengde mer enn 0
             df = df.loc[df[config["perioder"]["t"]["år"]] > 0]
     fig = go.Figure()
+    print("Lager figur for boxplot grid")
     for i in config["perioder"]:# Lager ett trace per årgang
         fig.add_trace(go.Box(
             y=df[config["perioder"][i]["år"]],
             name=str(config["perioder"][i]["år"]),
-            boxpoints=boxpoints,
+            boxpoints = "all", # boxpoints, # Koblet til dropdown for outliers, foreløpig fungerer den ikke så den kommenteres ut
             text = df['orgnrNavn'],
 #            marker=dict(
 #                color='rgb(8,81,156)',
