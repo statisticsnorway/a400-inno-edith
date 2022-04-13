@@ -207,6 +207,10 @@ def boxplot_grid(variabel, checklist, aggregat, clickData): # Tatt ut av listen:
 #                    outlierwidth=2)),
 #            line_color='rgb(8,81,156)'
         ))
+    fig.update_layout(
+        xaxis_title = "Periode",
+        yaxis_title = variabel
+    )
     return dcc.Graph(id = "boxplot_grid", figure = fig)
 
 
