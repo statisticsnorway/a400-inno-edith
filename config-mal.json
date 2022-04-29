@@ -1,0 +1,45 @@
+{
+    "undersøkelse":"Fou",
+    "brukernavn": "",
+    "perioder":
+        {
+            "t":{
+                "delreg": ,
+                "år": "",
+                "år_til_år": ""
+            }
+        },
+    "aggregater":
+        [
+            ""
+        ],
+    "id_variabel":"orgnr_delreg",
+    "navn_variabel": "navn_delreg",
+    "kombinert_id_navn": "orgnrNavn",
+    "nøkkeltall_enhetssiden":
+        [
+            ""
+        ],
+    "variabel_navn": {
+        "gammelt navn": "nytt navn"
+    },
+    "data":{
+        "filsti": ""
+    },
+    "tabeller":{
+        "raadata": "raadata",
+        "svarinngang": "svarinngang",
+        "editeringer": "editeringer",
+        "tidslinje": "tidslinje"
+    },
+    "default-valg":{
+        "grid": {
+            "gruppering": "",
+            "variabel": ""
+        },
+        "enhet": {
+            "gruppering": "",
+            "variabel": ""
+        }
+    }
+}
