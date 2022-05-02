@@ -118,26 +118,7 @@ app.layout = html.Div([
     html.Div(id = 'page-content'),
 ])
 
-#Callbacks
-
-@app.callback(Output('page-content', 'children'),
-            [Input('url', 'pathname')])
-def display_page(pathname):
-    if pathname == '/plots':
-        return Plots()
-    elif pathname == '/grid':
-        return Grid()
-    elif pathname == '/tidsserie':
-        return Tidsserie()
-    elif pathname == '/enhet':
-        return Enhet()
-    elif pathname == '/logg':
-        return Logg()
-    elif pathname == '/kontroller':
-        return Kontroller()
-    else:
-        return Svarinngang()
-
+# Callbacks
 from models.callbacks import get_callbacks
 
 get_callbacks(app)
