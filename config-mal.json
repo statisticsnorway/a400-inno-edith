@@ -4,29 +4,27 @@
     "perioder":
         {
             "t":{
-                "delreg": 2319,
-                "år": "År_2020",
-                "år_til_år": "Differanse År_2019 til År_2020"
+                "delreg": ,
+                "år": "",
+                "år_til_år": ""
             }
         },
     "aggregater":
         [
-            "NACE1",
-            "ORG_FORM"
+            ""
         ],
     "id_variabel":"orgnr_delreg",
     "navn_variabel": "navn_delreg",
     "kombinert_id_navn": "orgnrNavn",
     "nøkkeltall_enhetssiden":
         [
-            "POTETHOESTETTONN"
+            ""
         ],
     "variabel_navn": {
         "gammelt navn": "nytt navn"
     },
-    "endringsvariabler": "str_cols i update_table",
     "data":{
-        "filsti": "/ssb/stamme02/jordbruk/sbgrovfor/wk6"
+        "filsti": ""
     },
     "tabeller":{
         "raadata": "raadata",
@@ -36,12 +34,12 @@
     },
     "default-valg":{
         "grid": {
-            "gruppering": "ORG_FORM",
-            "variabel": "POTETAVLING"
+            "gruppering": "",
+            "variabel": ""
         },
         "enhet": {
-            "gruppering": "ORG_FORM",
-            "variabel": "POTETAVLING"
+            "gruppering": "",
+            "variabel": ""
         }
     }
 }
