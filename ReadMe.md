@@ -5,13 +5,15 @@
 ## Hvordan komme i gang med Edith?
 
 1) Klon dette repo til ditt eget område får å få tak i alle filer.
-Oppskrift: xxx
+Oppskrift: https://statistics-norway.atlassian.net/wiki/spaces/IA/pages/3052699649/Hvordan+pne+og+bruke+Edith+p+egne+data
 
 2) Filer som må endres:
-    * config.json (beskrivelse av fil: xxx)
+    * config.json må lages, mal for oppsett hentes ved kloning 
         - Beskrivelse av de ulike feltene ligger i Oppsett_config_og_database.ipynb
         - Endre til -dine- data, husk å endre filsti til hvor sqlite-databasen skal lagres (lages i punkt 3)
-    * app.py  
+    * variabler.json
+        - må lages dersom man ønsker metadatastyrt håndtering av variabler
+    * app.py (hvis Edith skal kjøres som app utenfor notebook. Fungerer p.t kun på sl-inno-p1) 
        - Inneholder hardkodet brukernavn og passord. Default (TEMP - TEMP)
        - Sjekk port for kjøring (aller nederste linje i fil. Velg en port du har lagt til i putty)
 
@@ -24,10 +26,15 @@ Oppskrift: xxx
    - OBS! Endre til riktig Oracle-brukernavn i celle 3
    - Velg "Cell" - "Run all"
    
-   
+#### For oppstart fra notebook
+5) Åpne "Edith notebook.ipynb" i JupyterLab. Følg instruksjonene.
 
+* Får du feilmeldinger i oppstart slik at Jupyterlab henger? Restart kernel
+
+* For å stoppe app'en, kjør nederste celle i notebook'en
+
+#### For oppstart fra Terminal (som egen app)
 5) Start edith med kommandoen " python3 app.py" i et terminalvindu
-
 
 * Fungerer ikke app'en helt som du har tenkt? Sjekk i terminal-vinduet! Feilmeldinger dukker opp der
 
