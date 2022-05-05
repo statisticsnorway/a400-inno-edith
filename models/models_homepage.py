@@ -192,7 +192,7 @@ def svarinngang_tbl1(dropdown, hm_input):
             return no_update
     else:
         return no_update
-    
+
 
 def main():
     print("Sett inn tester her")
