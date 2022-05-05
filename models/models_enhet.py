@@ -43,7 +43,7 @@ def enhetstabell_store(org): # Sett inn dette , variabel
 #        df = df.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")
     data = df.to_dict('rows')
     columns = [{'name': i, 'id': i} for i in df.columns]
-    return data #table(id = 'table3', data = data, columns = columns)
+    return data
 
 
 
@@ -108,20 +108,6 @@ def update_columns(n_clicks, data, value, columns):
                     'deletable': True,
                     'editable': True
                 })
-    #elif len(value) == 0: # Tror dette kan fjernes, kan ikke se noen nytte av det
-    #    if "År_2019" not in value and "År_2019_editert" in list(df.columns):
-    #        columns.remove({
-    #            'name': "År_2019_editert",
-    #            'id': "År_2019_editert",
-    #            'deletable': True
-    #        })
-
-    #    elif "Vekt" not in value and "Vekt_editert" in list(df.columns):
-    #        columns.remove({
-    #            'name': "Vekt_editert",
-    #            'id': "Vekt_editert",
-    #            'deletable': True
-    #        })
     if n_clicks: # Dette aktiveres bare hvis man har klikket på "Godta endringer" knappen
         if f'{config["perioder"]["t"]["år"]}_editert' in df.columns: # Sjekker at man har opprettet en "_editert" kolonne i tidligere steg
             for i in df.index: # Looper gjennom index til tabellen, sikrer at alle endrede verdier blir med om flere endres samtidig
@@ -129,9 +115,6 @@ def update_columns(n_clicks, data, value, columns):
                     df.at[i,t] = df.loc[i][config["perioder"]["t"]["år"] + "_editert"]
                     oppdater_database(df.loc[[i]].reset_index()) # Oppdaterer til database, se egen funksjon. Ligger her sånn at endringer i dashbordet kun skjer hvis lagringen til databasen skjedde # OBS! Må ha med resetindex pga loc[0] i oppdater_database-funksjonen
             df.drop(columns = config["perioder"]["t"]["år"] + "_editert", inplace = True) # Dropper kolonnen med editerte verdier  slik at dashbordet tas tilbake til slik det var før man lagde en "_editert" kolonne(merk, den endrede verdien er nå lagret til tabellen for editeringer som er spesifisert i config.json)
-        #elif 'Vekt_editert' in df.columns:
-        #    df['Vekt'] = df['Vekt_editert']
-        #    df.drop(columns = 'Vekt_editert', inplace = True)
         data = df.to_dict('rows')
         print(df.columns)
         columns = [{'name': i, 'id': i, 'on_change': {'action': 'validate'}, 'selectable': True} if i in set([config["perioder"]["t"]["år"], 'Vekt']) 
@@ -154,7 +137,6 @@ def oppdater_database(df): # Funksjon for å lagre editering og loggføre bruker
     enhet = df[config['id_variabel']].loc[0] # Brukes for å finne den spesifikke raden i datasettet som endres
     variabel = df['VARIABEL'].loc[0]
     data_som_endres = pd.read_sql(f"SELECT * from {config['tabeller']['raadata']} WHERE {config['id_variabel']} = '{enhet}' and VARIABEL ='{variabel}'", con=engine) # Leser inn hele raden med tidligere data
-    #del data_som_endres['index'] # Fjerner unødvendige kolonner
     data_som_endres['Editert_av'] = df['Editert_av'].loc[0] # Henter info om hvem som editerte fra Edith sin tabell
     data_som_endres['Kommentar'] = df['Kommentar'].loc[0] # Henter kommentaren som ble lagt inn i Edith sin tabell
     data_som_endres['Log_tid'] = date.datetime.now().strftime('%Y-%m-%d %H:%M:%S') # Legger til kolonne med tidsstempel
@@ -163,7 +145,7 @@ def oppdater_database(df): # Funksjon for å lagre editering og loggføre bruker
     data_som_endres[config["perioder"]["t"]["år"]] = float(df[config["perioder"]["t"]["år"]].loc[0]) # Å definere det som float() gjør at det ikke blir til bytes i sql databasen
     print("Dette skal committes til editeringer")
     print(data_som_endres)
-    
+
     """ Lager strings for SQL insert slik at det blir riktige kolonnenavn og riktig antall kolonner """
     try:
         del data_som_endres["index"] # Midlertidig feilhåndtering, burde kunne fjernes
@@ -298,7 +280,6 @@ def offcanvas_innhold(foretak):
         print("Henter metadata og kommentarer til sidebar")
         metadata = tuple(config_variabler["metadatavariabler"])
         print(metadata)
-        #df = pd.read_sql(f'SELECT Kommentar FROM {config["tabeller"]["editeringer"]} WHERE ORGNR = {str(foretak)[:9]}', con=engine)
         df = pd.read_sql(f'SELECT Variabel, {config["perioder"]["t"]["år"]}  AS VERDI FROM {config["tabeller"]["raadata"]} WHERE ORGNR = {str(foretak)[:9]} AND Variabel IN {metadata}', con=engine).drop_duplicates()
         print(df)
         data = df.to_dict("rows")
