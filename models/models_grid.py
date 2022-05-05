@@ -44,7 +44,6 @@ def table_grid(data, grupp, clickData):
     perioder = {}
     for i in config["perioder"]: # Finnes sikkert en bedre løsning enn dette
         perioder[i] = config["perioder"][i]["år"] # Må kanskje finne en litt annen måte å gjøre det på hvis kobling av perioder skal skje i funksjonen
-#    str_cols = [config["id_variabel"], config["navn_variabel"], "Variabel"] # Kolonner til tabellen
     str_cols = [config["kombinert_id_navn"], "VARIABEL"]
     num_cols = list(perioder.values())
     """ Setter korrekt datatype til hver kolonne """
@@ -196,14 +195,7 @@ def boxplot_grid(variabel, boxpoints, checklist, aggregat, clickData):
             y=df[config["perioder"][i]["år"]],
             name=str(config["perioder"][i]["år"]),
             boxpoints=boxpoints,
-            text = df['orgnrNavn'],
-#            marker=dict(
-#                color='rgb(8,81,156)',
-#                outliercolor='rgba(219, 64, 82, 0.6)',
-#                line=dict(
-#                    outliercolor='rgba(219, 64, 82, 0.6)',
-#                    outlierwidth=2)),
-#            line_color='rgb(8,81,156)'
+            text = df['orgnrNavn']
         ))
     return dcc.Graph(id = "boxplot_grid", figure = fig)
 
