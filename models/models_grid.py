@@ -145,7 +145,7 @@ def histogram_grid(variabel, bins, checklist, aggregat, clickData):
             tilpasning_til_spørring = tilpasning_til_spørring + aggregering_filter
     spørring = f"SELECT * FROM {config['tabeller']['raadata']} " + tilpasning_til_spørring
     df = pd.read_sql(spørring, con = engine)
-    
+
     for i in config["perioder"]:
         df[config["perioder"][i]["år"]] = df[config["perioder"][i]["år"]].astype(float)
     if checklist != None: # Checklist starter som None
@@ -225,7 +225,7 @@ def sammenlign_editert_ueditert(timestamp):
     df_re["diff"] = (df_re["År_2021_y"]-df_re["År_2021_x"])/df_re["År_2021_x"]*100
     df_re = df_re.sort_values(by=aggregat, ascending=True)
     df_re.loc[(df_re["diff"] != 0) & (df_re["diff"].notna())]
-    
+
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(x = df_re[aggregat], y = df_re["År_2021_x"], name = "Editerte")

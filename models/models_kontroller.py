@@ -17,11 +17,11 @@ import dash_table as dt
 import json
 with open("config.json") as config:
     config = json.load(config)
-    
+
 with open("variabler.json") as variabler:
     config_variabler = json.load(variabler)
-    
-    
+
+
 import sqlite3
 from sqlalchemy import create_engine
 import datetime as date
@@ -39,18 +39,18 @@ def innhent_feilliste(liste):
     print(liste)
     df = pd.read_csv(config['data']['filsti'] + "/feillister_test2.csv", ';')
     df['feilliste'] = df['feilliste'].str.replace(',', '') #Tar bort eventuelle komma i feilliste-kolonnen da det ikke funker med dropdown
-    
+
     #Tar bort kommentarkolonnen som er lagret i databasen hvis det ikke ligger inne en tabell fra inneværende statistikkår
     t = config["perioder"]["t"]["år"][3:8]
     df['orgnr'] = df['orgnr'].astype(object).astype(str)
-    
+
     if 'feilliste_kommentar' + t in pd.read_sql('SELECT name from sqlite_master where type= "table"', con=engine)['name'].tolist():
         df = df.drop("kommentar", axis = 1)
         print('Kommentar hentes fra db')
-    
+
     #Henter kommentarkolonnen fra databasen
         feilliste_kommentar = pd.read_sql(f"SELECT * from feilliste_kommentar{t} WHERE kommentar IS NOT NULL", con=engine)
-        
+
         df = pd.merge(df, feilliste_kommentar, how = "left", on = ['feilliste','orgnr'])
         cols = df.columns.drop('kommentar').tolist()
         df = df[['kommentar'] + cols]
@@ -58,12 +58,12 @@ def innhent_feilliste(liste):
         #Kommentarer lastes inn i databasen
         feillister_kommentar = df[['kommentar','feilliste','orgnr']]
         feillister_kommentar.to_sql('feilliste_kommentar' + t, con = engine, if_exists = 'append', chunksize = None)
-    
+
     #Bearbeider og fikser variabeltyper
     df = df.replace(r'^\.$', np.nan, regex = True)
     df = df.apply(pd.to_numeric, errors= 'ignore')
     df_str = df.select_dtypes(include = ['object'])
-    
+
     col_list = []
     for col in df_str.columns:
         if (True in list(df_str[col].str.contains('[A-Za-z]', regex = True))) is False:
@@ -71,7 +71,7 @@ def innhent_feilliste(liste):
     df[col_list] = df[col_list].replace(',', '.', regex=True).astype(float)
     df['orgnr'] = df['orgnr'].astype(object).astype(str)
     df['kommentar'] = df['kommentar'].fillna('.') #fyller inn for å gjøre det mulig å filtrere bort de som er sjekket
-   
+
     print(df.head())
     #Avhengig av hvilken liste som velges i dropdown hentes variabler
     if "Alle" not in liste:
@@ -92,7 +92,7 @@ def feilliste_tabell(url, valgt_feilliste):
               else {'name': i, 'id': i, "editable": True} if i == "kommentar"
               else {"name": i, "id": i, "hideable": True}
               for i in df.columns]
-    
+
     return dt.DataTable(
             id = 'feilliste_tabell_endret',
             style_cell={'textAlign': 'left', 'minWidth': '100px'},
@@ -115,23 +115,23 @@ def model_feilliste_figur(enhet_rad, tabelldata,feilliste):
     if enhet_rad and feilliste:
         print('Lager feilliste figur')
         print("Valgt rad: ", enhet_rad)
-        
+
         # Henter ut orgnr basert på valgt rad (celle som er klikket på)
         valgt_rad          = tabelldata[enhet_rad["row"]]
         enhet_klikket      = valgt_rad["orgnr"]
         enhet_klikket_navn = valgt_rad["navn"]
         enhet_klikket_orgnrnavn = enhet_klikket + ": " + enhet_klikket_navn
         print("Valgt enhet: ",enhet_klikket_orgnrnavn)
-        
+
         # Henter fra delreg basert på valgt orgnr. ---
         df_enhet = pd.read_sql(f"SELECT * FROM {config['tabeller']['raadata']} WHERE Orgnr = '{enhet_klikket}'", con=engine)
         print("Data for enheten: ")
         print(df_enhet)
-        
+
         # Finner variablene i delreg.---
         options_vars = df_enhet['VARIABEL'].unique().tolist()
         print("options_vars: ", options_vars)
-        
+
         # Finner variablene i valgt feilliste ---
         feilliste_valgt = feilliste
         print("Feilliste valgt: ", feilliste_valgt)
@@ -143,33 +143,33 @@ def model_feilliste_figur(enhet_rad, tabelldata,feilliste):
         feilliste_vars = df_feilliste_valgt.columns.tolist()
         feilliste_vars = [feilliste_vars.upper() for feilliste_vars in feilliste_vars] #Variabler har store bokstaver i appen
         print("feilliste_vars: ", feilliste_vars)
-        
+
         # Finner relevante variable for figuren
         relevant_vars = list(set(feilliste_vars).intersection(options_vars))
         print("Relevante vars", relevant_vars)
-        
+
         # Plukker ut disse variablene fra delreg.
         df_enhet_relevant_vars = df_enhet[df_enhet['VARIABEL'].isin(relevant_vars)]
         print("Data som skal inn i figuren: ")
         print(df_enhet_relevant_vars)
-        
+
         # Omformaterer
         perioder = {} # Finnes sikkert en bedre løsning enn dette
         for i in config["perioder"]:
             perioder[i] = config["perioder"][i]["år"]
-                
+
         df_enhet_relevant_vars = df_enhet_relevant_vars[["VARIABEL"] + list(perioder.values())]
         df_enhet_relevant_vars = df_enhet_relevant_vars.melt(id_vars=["VARIABEL"], var_name="År", value_name="Verdi").sort_values(["VARIABEL", "År"])
-        
+
         df_enhet_relevant_vars['Verdi'] = df_enhet_relevant_vars['Verdi'].str.replace(',', '').astype(float)
 
-        
+
         ("Data som skal inn i figuren, riktig format:")
         print(df_enhet_relevant_vars)
-        
+
         # Lager figuren 
         print("Lager figur")
-        
+
         fig1 = px.bar(df_enhet_relevant_vars, 
                       x="År", y="Verdi",
                       barmode = "group",
@@ -191,7 +191,7 @@ def oppdater_feilliste_db(data):
     print(df.head())
     if 'feilliste' in df: #Bare for å teste om det ikke er en tom df
         feillister_kommentar = df[['kommentar','feilliste','orgnr']]
-        
+
          #For å unngå at radene forsvinner etter at man subsetter på feilliste blir radene "appended" og dubletter fjernes etterpå
         feillister_kommentar.to_sql('feilliste_kommentar' + t, con = engine, if_exists = 'append', chunksize = None)
         pd.read_sql(f"SELECT * from feilliste_kommentar{t} WHERE kommentar IS NOT NULL", con=engine).drop('index', axis = 1).drop_duplicates(subset = ['orgnr', 'feilliste'], keep='last').to_sql('feilliste_kommentar' + t, con = engine, if_exists = 'replace')
@@ -209,18 +209,18 @@ def kontroll_enhetstabell_store(enhet_rad, tabelldata): # Sett inn dette , varia
     #org = org[0:9]
     print("enhetstabell_store")
     print("valgt: ", enhet_rad)
-    
+
     # Henter orgnr fra tabell
     print("Henter org fra tabell")
-    
+
     # Henter ut orgnr basert på valgt rad (celle som er klikket på)
     valgt_rad          = tabelldata[enhet_rad["row"]]
     enhet_klikket      = valgt_rad["orgnr"]
     enhet_klikket_navn = valgt_rad["navn"]
     enhet_klikket_orgnrnavn = enhet_klikket + ": " + enhet_klikket_navn
     print("Valgt enhet: ",enhet_klikket_orgnrnavn)
-    
- 
+
+
     variabler = tuple(config_variabler["variabler"])
     print(variabler)
     #df = pd.read_sql(f"SELECT * FROM {config['tabeller']['raadata']} WHERE OrgnrNavn = '{org}'", con=engine)
@@ -249,7 +249,7 @@ def kontroll_enhetstabell(enhet_rad, data):
     perioder = {}
     for i in config["perioder"]: # Finnes sikkert en bedre løsning enn dette
         perioder[i] = config["perioder"][i]["år"] # Må kanskje finne en litt annen måte å gjøre det på hvis kobling av perioder skal skje i funksjonen
-    
+
     if enhet_rad:
         df = pd.DataFrame().from_dict(data)
         print("enhetstabell")
@@ -266,7 +266,7 @@ def kontroll_enhetstabell(enhet_rad, data):
         return table(id = 'kontroll_enhet_tabell', data = data, columns = columns, column_selectable="multi")
     else:
         no_update
-        
+
 '''
 @app.callback(
     [Output('kontroll_enhet_tabell', 'data')],
@@ -275,9 +275,9 @@ def kontroll_enhetstabell(enhet_rad, data):
     [Input('kontroll_editer_enhet_godta', 'n_clicks')],
     [Input('kontroll_enhet_tabell', 'data')],
     [Input('kontroll_enhet_tabell', 'selected_columns')],
-    [State('kontroll_enhet_tabell', 'columns')])        
-'''    
-        
+    [State('kontroll_enhet_tabell', 'columns')])
+'''
+
 def kontroll_update_columns(n_clicks, data, value, columns):
     print("Update_columns starter")
     t = config["perioder"]["t"]["år"]
@@ -343,7 +343,7 @@ def oppdater_database(df): # Funksjon for å lagre editering og loggføre bruker
     data_som_endres[config["perioder"]["t"]["år"]] = float(df[config["perioder"]["t"]["år"]].loc[0]) # Å definere det som float() gjør at det ikke blir til bytes i sql databasen
     print("Dette skal committes til editeringer")
     print(data_som_endres)
-    
+
     """ Lager strings for SQL insert slik at det blir riktige kolonnenavn og riktig antall kolonner """
     # Midlertidig start
     del data_som_endres["index"]
@@ -358,7 +358,7 @@ def oppdater_database(df): # Funksjon for å lagre editering og loggføre bruker
     antall = antall[:-1] # fjerner siste "," så listen blir riktig
     print(kolonner)
     print(antall)
-    
+
     """ Setter inn i editeringer tabellen """
     sqlite_insert_query = f"""INSERT INTO editeringer
             ({kolonner})
@@ -368,15 +368,15 @@ def oppdater_database(df): # Funksjon for å lagre editering og loggføre bruker
     conn.commit()
     CursorObject.close()
     print("Editering og loggføring lagret") # Bekreftelse i terminalen på at endringen ble skrevet
-    
-    
+
+
 
 def kontroll_offcanvas_innhold(enhet_rad, tabelldata):
     if enhet_rad:
         print("Henter metadata og kommentarer til sidebar")
         metadata = tuple(config_variabler["metadatavariabler"])
         print(metadata)
-        
+
         # Henter ut orgnr basert på valgt rad (celle som er klikket på)
         valgt_rad          = tabelldata[enhet_rad["row"]]
         enhet_klikket      = valgt_rad["orgnr"]
@@ -384,9 +384,9 @@ def kontroll_offcanvas_innhold(enhet_rad, tabelldata):
         enhet_klikket_orgnrnavn = enhet_klikket + ": " + enhet_klikket_navn
         print("enhet_klikket", enhet_klikket)
         print("Valgt enhet: ",enhet_klikket_orgnrnavn)
-        
+
         print("Henter metadata for",enhet_klikket) 
-        
+
         #df = pd.read_sql(f'SELECT Kommentar FROM {config["tabeller"]["editeringer"]} WHERE ORGNR = {str(foretak)[:9]}', con=engine)
         df = pd.read_sql(f'SELECT Variabel, {config["perioder"]["t"]["år"]}  AS VERDI FROM {config["tabeller"]["raadata"]} WHERE ORGNR = {str(enhet_klikket)[:9]} AND Variabel IN {metadata}', con=engine).drop_duplicates()
 
