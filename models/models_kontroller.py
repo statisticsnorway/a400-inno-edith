@@ -186,7 +186,7 @@ def model_feilliste_figur(enhet_rad, tabelldata,feilliste):
 
 
 def oppdater_feilliste_db(data):  
-    t = config["perioder"]["t"]["år"][3:8]
+    t = config["perioder"]["t"]["delreg"]
     df = pd.DataFrame().from_dict(data)
     print(df.head())
     if 'feilliste' in df: #Bare for å teste om det ikke er en tom df
