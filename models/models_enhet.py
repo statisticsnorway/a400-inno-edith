@@ -31,16 +31,18 @@ with open("variabler.json") as config_variabler:
 def enhetstabell_store(org): # Sett inn dette , variabel
     print("Laster inn data")
     df = pd.read_sql(f"SELECT * FROM raadata WHERE OrgnrNavn = '{org}'", con=engine)
-#    try: # Denne koden skal slå sammen editeringer med rådata, men det fungerer ikke enda. Må testes mer.
-#        df_e = pd.read_sql(f"select * from editeringer WHERE orgnrNavn = '{org}'", con=engine)
-#        editeringer = True
-#    except:
-#        editeringer = False
-#        print("Ingen endringer er loggført")
-#    if editeringer != False:
-#        df = pd.concat([df, df_e], ignore_index = True)
-#        df = df.sort_values(by="Log_tid", ascending=False)
-#        df = df.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")
+    
+    try: # Slår sammen editeringer med rådata
+        df_e = pd.read_sql(f"select * from editeringer WHERE orgnrNavn = '{org}'", con=engine)
+        editeringer = True
+    except:
+        editeringer = False
+        print("Ingen endringer er loggført")
+    if editeringer != False:
+        df = pd.concat([df, df_e], ignore_index = True)
+        print(df)
+        df = df.sort_values(by="Log_tid", ascending=False)
+        df = df.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")
     data = df.to_dict('rows')
     columns = [{'name': i, 'id': i} for i in df.columns]
     return data
@@ -53,25 +55,12 @@ def enhetstabell1(n_clicks, data, var):
         perioder[i] = config["perioder"][i]["år"] # Må kanskje finne en litt annen måte å gjøre det på hvis kobling av perioder skal skje i funksjonen
     if n_clicks:
         df = pd.DataFrame().from_dict(data)
-        df = df[[config["id_variabel"], config["navn_variabel"], "VARIABEL"] + list(perioder.values())]
-        df["Editert_av"] = "Skriv brukernavn" # Dette er en default, den overskrives om noen av sjekkene for brukernavn nedenfor finner noe annet
-        if config["brukernavn"] != "":
-            df["Editert_av"] = config["brukernavn"]
-            print("a")
-        else:
-            try:
-                print("b")
-                df["Editert_av"] = getpass.getuser()
-            except:
-                print("c")
-                try:
-                    print("d")
-                    df["Editert_av"] = request.authorization["username"]
-                except:
-                    print("e")
-                    print("Finner ikke brukernavn, setter inn midlertidig verdi")    
-        df["Kommentar"] = ""
         df = df[df['VARIABEL'].isin(var)]
+        if "Editert_av" in df.columns:
+             df = df[[config["id_variabel"], config["navn_variabel"], "VARIABEL"] + list(perioder.values()) + ["Editert_av", "Kommentar"]]
+        else:
+            df = df[[config["id_variabel"], config["navn_variabel"], "VARIABEL"] + list(perioder.values())]
+            df["Kommentar"] = ""        
         data = df.to_dict('rows')
         """ Definerer hvilke kolonner som skal være selekterbare, og hvilke som ikke skal være det """
         columns = [{'name': i, 'id': i, 'on_change': {'action': 'validate'}, 'selectable': True} if i in set([config["perioder"]["t"]["år"], 'Vekt']) 
@@ -131,30 +120,25 @@ def oppdater_database(df): # Funksjon for å lagre editering og loggføre bruker
     print("Starter lagring av editering og loggføring av data nedenfor")
     print("Dette er dataene fra tabellen:")
     print(df)
-    print()
     conn, engine, db = connect() # Fra models_delt.py
     CursorObject = conn.cursor()
     enhet = df[config['id_variabel']].loc[0] # Brukes for å finne den spesifikke raden i datasettet som endres
     variabel = df['VARIABEL'].loc[0]
     data_som_endres = pd.read_sql(f"SELECT * from {config['tabeller']['raadata']} WHERE {config['id_variabel']} = '{enhet}' and VARIABEL ='{variabel}'", con=engine) # Leser inn hele raden med tidligere data
-    data_som_endres['Editert_av'] = df['Editert_av'].loc[0] # Henter info om hvem som editerte fra Edith sin tabell
+    data_som_endres['Editert_av'] = getpass.getuser() # Henter info om hvem som editerte
     data_som_endres['Kommentar'] = df['Kommentar'].loc[0] # Henter kommentaren som ble lagt inn i Edith sin tabell
     data_som_endres['Log_tid'] = date.datetime.now().strftime('%Y-%m-%d %H:%M:%S') # Legger til kolonne med tidsstempel
     """ Lagrer tidligere verdi før den overskrives for periode t """
     data_som_endres["Tidligere_verdi"] = data_som_endres[config["perioder"]["t"]["år"]]
     data_som_endres[config["perioder"]["t"]["år"]] = float(df[config["perioder"]["t"]["år"]].loc[0]) # Å definere det som float() gjør at det ikke blir til bytes i sql databasen
+    try:
+        del data_som_endres["index"] #Index-variabel som lages i SQLite-db. Sletter denne kolonnen.
+    except:
+        print("ingen kolonne som heter index")
     print("Dette skal committes til editeringer")
     print(data_som_endres)
 
     """ Lager strings for SQL insert slik at det blir riktige kolonnenavn og riktig antall kolonner """
-    try:
-        del data_som_endres["index"] # Midlertidig feilhåndtering, burde kunne fjernes
-    except:
-        print("Feilsjekk 1 gjorde ingenting")
-    try:
-        del data_som_endres["level_0"] # Midlertidig feilhåndtering, burde kunne fjernes
-    except:
-        print("Feilsjekk 2 gjorde ingenting")
     kolonner = ""
     for i in data_som_endres.columns: # Finnes sikkert en bedre løsning enn dette
         kolonner = kolonner + str(i) + str(", ")
@@ -172,7 +156,9 @@ def oppdater_database(df): # Funksjon for å lagre editering og loggføre bruker
         c = conn.cursor()
         c.execute(f'''CREATE TABLE {config["tabeller"]["editeringer"]}({kolonner})''')
         conn.commit()
-
+    
+    #dersom int64-variabler lastes inn uten denne snutten, blir variabeltypen lagret i feil format i sqlite-databasen
+    sqlite3.register_adapter(np.int64, lambda val: int(val))
     """ Setter inn i editeringer tabellen """
     sqlite_insert_query = f"""INSERT INTO editeringer
             ({kolonner})
