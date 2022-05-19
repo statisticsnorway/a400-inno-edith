@@ -30,7 +30,7 @@ def treeplot(n_click, var, grupp):
         if len(var) > 1:
             df = pd.read_sql(f"SELECT * FROM {config['tabeller']['raadata']} WHERE VARIABEL in {tuple(var)}", con=engine)
         df = df.fillna(np.nan)
-        fig = px.treemap(df, path = grupp , values = config["perioder"]["t"]["år"])
+        fig = px.treemap(df, path = grupp , values = config["perioder"]["t"]["periode"])
         graph = dcc.Graph(id = 'treemap', figure = fig)
         data = df.to_dict('rows')
         return graph, data
@@ -43,7 +43,7 @@ def table_grid(data, grupp, clickData):
     """ Forbereder lister over kolonner som skal være med videre, etter hvorvidt de er string/objekter eller numeriske kolonner """
     perioder = {}
     for i in config["perioder"]: # Finnes sikkert en bedre løsning enn dette
-        perioder[i] = config["perioder"][i]["år"] # Må kanskje finne en litt annen måte å gjøre det på hvis kobling av perioder skal skje i funksjonen
+        perioder[i] = config["perioder"][i]["periode"] # Må kanskje finne en litt annen måte å gjøre det på hvis kobling av perioder skal skje i funksjonen
     str_cols = [config["kombinert_id_navn"], "VARIABEL"]
     num_cols = list(perioder.values())
     """ Setter korrekt datatype til hver kolonne """
@@ -54,10 +54,10 @@ def table_grid(data, grupp, clickData):
     if len(config["perioder"]) > 1:
         num_cols = []
         for i in range(len(config["perioder"])):
-            a = config["perioder"][list(config["perioder"].keys())[i]]["år"]
+            a = config["perioder"][list(config["perioder"].keys())[i]]["periode"]
             num_cols.append(a)
             try:
-                b = config["perioder"][list(config["perioder"].keys())[i+1]]["år"]
+                b = config["perioder"][list(config["perioder"].keys())[i+1]]["periode"]
                 #c = config["perioder"][list(config["perioder"].keys())[i]]["år_til_år"]
                 c = str(b) + " til " + str(a)
                 df[c] = df[a] - df[b]
@@ -117,7 +117,7 @@ def scatterplot_grid(x, y, checklist, aggregat, clickData):
     spørring = f"SELECT * FROM {config['tabeller']['raadata']} " + tilpasning_til_spørring
     df = pd.read_sql(spørring, con = engine)
     df = df.loc[(df["VARIABEL"].isin([x, y]))].drop_duplicates(subset=["orgnrNavn", "VARIABEL"], keep="last")
-    df = df.pivot(index = "orgnrNavn", columns=["VARIABEL"], values = config["perioder"]["t"]["år"])
+    df = df.pivot(index = "orgnrNavn", columns=["VARIABEL"], values = config["perioder"]["t"]["periode"])
     df = df[[x, y]].astype(float)
     if checklist != None: # Checklist starter som None
         if len(checklist) != 0: # Hvis man har krysset av er lengde mer enn 0
@@ -148,18 +148,18 @@ def histogram_grid(variabel, bins, checklist, aggregat, clickData):
     df = pd.read_sql(spørring, con = engine)
 
     for i in config["perioder"]:
-        df[config["perioder"][i]["år"]] = df[config["perioder"][i]["år"]].astype(float)
+        df[config["perioder"][i]["periode"]] = df[config["perioder"][i]["periode"]].astype(float)
     if checklist != None: # Checklist starter som None
         if len(checklist) != 0: # Hvis man har krysset av er lengde mer enn 0
-            df = df.loc[df[config["perioder"]["t"]["år"]] > 0]
+            df = df.loc[df[config["perioder"]["t"]["periode"]] > 0]
     fig = go.Figure()
     for i in config["perioder"]: # Lager ett trace per årgang
         fig.add_trace(go.Histogram(
-            x = df[config["perioder"][i]["år"]],
+            x = df[config["perioder"][i]["periode"]],
             histfunc = "count",
             histnorm = '',
             nbinsx = bins,
-            name = config["perioder"][i]["år"]
+            name = config["perioder"][i]["periode"]
         ))
     fig.update_layout(barmode = "group")
     return dcc.Graph(id = "histogram_grid", figure = fig)
@@ -186,15 +186,15 @@ def boxplot_grid(variabel, boxpoints, checklist, aggregat, clickData):
     df = pd.read_sql(spørring, con = engine)
 
     for i in config["perioder"]:
-        df[config["perioder"][i]["år"]] = df[config["perioder"][i]["år"]].astype(float)
+        df[config["perioder"][i]["periode"]] = df[config["perioder"][i]["periode"]].astype(float)
     if checklist != None: # Checklist starter som None
         if len(checklist) != 0: # Hvis man har krysset av er lengde mer enn 0
-            df = df.loc[df[config["perioder"]["t"]["år"]] > 0]
+            df = df.loc[df[config["perioder"]["t"]["periode"]] > 0]
     fig = go.Figure()
     for i in config["perioder"]:# Lager ett trace per årgang
         fig.add_trace(go.Box(
-            y=df[config["perioder"][i]["år"]],
-            name=str(config["perioder"][i]["år"]),
+            y=df[config["perioder"][i]["periode"]],
+            name=str(config["perioder"][i]["periode"]),
             boxpoints=boxpoints,
             text = df['orgnrNavn']
         ))
