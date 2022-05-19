@@ -58,7 +58,8 @@ def table_grid(data, grupp, clickData):
             num_cols.append(a)
             try:
                 b = config["perioder"][list(config["perioder"].keys())[i+1]]["år"]
-                c = config["perioder"][list(config["perioder"].keys())[i]]["år_til_år"]
+                #c = config["perioder"][list(config["perioder"].keys())[i]]["år_til_år"]
+                c = str(b) + " til " + str(a)
                 df[c] = df[a] - df[b]
                 num_cols.append(c)
             except:
