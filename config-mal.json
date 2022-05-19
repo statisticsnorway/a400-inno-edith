@@ -1,5 +1,5 @@
 {
-    "undersøkelse":"Fou",
+    "undersøkelse":"",
     "brukernavn": "",
     "perioder":
         {
@@ -19,9 +19,6 @@
         [
             ""
         ],
-    "variabel_navn": {
-        "gammelt navn": "nytt navn"
-    },
     "data":{
         "filsti": ""
     },
