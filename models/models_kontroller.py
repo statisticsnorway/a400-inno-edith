@@ -43,7 +43,7 @@ def innhent_feilliste(liste):
     df['feilliste'] = df['feilliste'].str.replace(',', '') #Tar bort eventuelle komma i feilliste-kolonnen da det ikke funker med dropdown
 
     #Tar bort kommentarkolonnen som er lagret i databasen hvis det ikke ligger inne en tabell fra inneværende statistikkår
-    t = config["perioder"]["t"]["år"][3:8]
+    t = str(config["perioder"]["t"]["delreg"])
     df['orgnr'] = df['orgnr'].astype(object).astype(str)
 
     if 'feilliste_kommentar' + t in pd.read_sql('SELECT name from sqlite_master where type= "table"', con=engine)['name'].tolist():
@@ -158,10 +158,10 @@ def model_feilliste_figur(enhet_rad, tabelldata,feilliste):
         # Omformaterer
         perioder = {} # Finnes sikkert en bedre løsning enn dette
         for i in config["perioder"]:
-            perioder[i] = config["perioder"][i]["år"]
+            perioder[i] = config["perioder"][i]["periode"]
 
         df_enhet_relevant_vars = df_enhet_relevant_vars[["VARIABEL"] + list(perioder.values())]
-        df_enhet_relevant_vars = df_enhet_relevant_vars.melt(id_vars=["VARIABEL"], var_name="År", value_name="Verdi").sort_values(["VARIABEL", "År"])
+        df_enhet_relevant_vars = df_enhet_relevant_vars.melt(id_vars=["VARIABEL"], var_name="periode", value_name="Verdi").sort_values(["VARIABEL", "periode"])
 
         df_enhet_relevant_vars['Verdi'] = df_enhet_relevant_vars['Verdi'].str.replace(',', '').astype(float)
 
@@ -173,7 +173,7 @@ def model_feilliste_figur(enhet_rad, tabelldata,feilliste):
         print("Lager figur")
 
         fig1 = px.bar(df_enhet_relevant_vars, 
-                      x="År", y="Verdi",
+                      x="periode", y="Verdi",
                       barmode = "group",
                       facet_col = "VARIABEL",
                       facet_col_spacing=0.04, 
@@ -187,17 +187,16 @@ def model_feilliste_figur(enhet_rad, tabelldata,feilliste):
         return fig_feilliste_var
 
 
-def oppdater_feilliste_db(data):  
-    t = config["perioder"]["t"]["år"][3:8]
+def oppdater_feilliste_db(data):
+    t = str(config["perioder"]["t"]["delreg"])
+    print("Oppdaterer feilliste-fil i db - " + 'Tabell: feilliste_kommentar' + t)
     df = pd.DataFrame().from_dict(data)
     print(df.head())
     if 'feilliste' in df: #Bare for å teste om det ikke er en tom df
-        feillister_kommentar = df[['kommentar','feilliste','orgnr']]
-
+        feillister_kommentar = df[['kommentar','feilliste','orgnr']].astype(str)
          #For å unngå at radene forsvinner etter at man subsetter på feilliste blir radene "appended" og dubletter fjernes etterpå
         feillister_kommentar.to_sql('feilliste_kommentar' + t, con = engine, if_exists = 'append', chunksize = None)
         pd.read_sql(f"SELECT * from feilliste_kommentar{t} WHERE kommentar IS NOT NULL", con=engine).drop('index', axis = 1).drop_duplicates(subset = ['orgnr', 'feilliste'], keep='last').to_sql('feilliste_kommentar' + t, con = engine, if_exists = 'replace')
-
 
 '''
 @app.callback(Output('kontroll_tabell_enhet', 'data'),
@@ -234,10 +233,7 @@ def kontroll_enhetstabell_store(enhet_rad, tabelldata): # Sett inn dette , varia
     if editeringer != False:
         df = pd.concat([df, df_e], ignore_index = True)
         df = df.sort_values(by="Log_tid", ascending=False)
-        print("sånn ser sorteringen ut")
-        print(df.head())
         df = df.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")    
-    
         print(df.head())
     data = df.to_dict('rows')
     columns = [{'name': i, 'id': i} for i in df.columns]
@@ -252,7 +248,7 @@ def kontroll_enhetstabell_store(enhet_rad, tabelldata): # Sett inn dette , varia
 def kontroll_enhetstabell(enhet_rad, data):
     perioder = {}
     for i in config["perioder"]: # Finnes sikkert en bedre løsning enn dette
-        perioder[i] = config["perioder"][i]["år"] # Må kanskje finne en litt annen måte å gjøre det på hvis kobling av perioder skal skje i funksjonen
+        perioder[i] = config["perioder"][i]["periode"] # Må kanskje finne en litt annen måte å gjøre det på hvis kobling av perioder skal skje i funksjonen
 
     if enhet_rad:
         df = pd.DataFrame().from_dict(data)
@@ -266,7 +262,7 @@ def kontroll_enhetstabell(enhet_rad, data):
         df = df.dropna(subset=perioder.values()).drop_duplicates().reset_index(drop=True)
         data = df.to_dict('rows')
         """ Definerer hvilke kolonner som skal være selekterbare, og hvilke som ikke skal være det """
-        columns = [{'name': i, 'id': i, 'on_change': {'action': 'validate'}, 'selectable': True} if i in set([config["perioder"]["t"]["år"], 'Vekt']) 
+        columns = [{'name': i, 'id': i, 'on_change': {'action': 'validate'}, 'selectable': True} if i in set([config["perioder"]["t"]["periode"], 'Vekt']) 
             else {'name': i, 'id': i, 'editable': True} if i == "Kommentar" 
             else {'name': i, 'id': i} for i in df.columns]
         return table(id = 'kontroll_enhet_tabell', data = data, columns = columns, column_selectable="multi")
@@ -286,7 +282,7 @@ def kontroll_enhetstabell(enhet_rad, data):
 
 def kontroll_update_columns(n_clicks, data, value, columns):
     print("Update_columns starter")
-    t = config["perioder"]["t"]["år"]
+    t = config["perioder"]["t"]["periode"]
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
     df = pd.DataFrame().from_dict(data)
 
@@ -309,19 +305,19 @@ def kontroll_update_columns(n_clicks, data, value, columns):
                 })
 
     if n_clicks: # Dette aktiveres bare hvis man har klikket på "Godta endringer" knappen
-        if f'{config["perioder"]["t"]["år"]}_editert' in df.columns:
+        if f'{config["perioder"]["t"]["periode"]}_editert' in df.columns:
             print(df.columns)
             print(df.head(1))
             for i in df.index: # Looper gjennom index til tabellen, sikrer at alle endrede verdier blir med om flere endres samtidig
-                if pd.isna(df[config["perioder"]["t"]["år"] + "_editert"][i]) == False and pd.isna(df['Kommentar'][i]) == False: # Sjekker om det finnes en editert verdi
+                if pd.isna(df[config["perioder"]["t"]["periode"] + "_editert"][i]) == False and pd.isna(df['Kommentar'][i]) == False: # Sjekker om det finnes en editert verdi
                     print("editert verdi")
-                    df.at[i,t] = df.loc[i][config["perioder"]["t"]["år"] + "_editert"]
+                    df.at[i,t] = df.loc[i][config["perioder"]["t"]["periode"] + "_editert"]
                     print(df.at[i,t])
                     oppdater_database(df.loc[[i]].reset_index()) # Oppdaterer til database, se egen funksjon. Ligger her sånn at endringer i dashbordet kun skjer hvis lagringen til databasen skjedde # OBS! Må ha med resetindex pga loc[0] i funksjonen
-            df.drop(columns = config["perioder"]["t"]["år"] + "_editert", inplace = True)
+            df.drop(columns = config["perioder"]["t"]["periode"] + "_editert", inplace = True)
         data = df.to_dict('rows')
         print(df.columns)
-        columns = [{'name': i, 'id': i, 'on_change': {'action': 'validate'}, 'selectable': True} if i in set([config["perioder"]["t"]["år"], 'Vekt']) 
+        columns = [{'name': i, 'id': i, 'on_change': {'action': 'validate'}, 'selectable': True} if i in set([config["perioder"]["t"]["periode"], 'Vekt']) 
             else {'name': i, 'id': i, 'editable': True} if i == "Kommentar" 
             else {'name': i, 'id': i} for i in df.columns]
         print("Update_columns avsluttes")
@@ -345,8 +341,8 @@ def oppdater_database(df): # Funksjon for å lagre editering og loggføre bruker
     data_som_endres['Kommentar'] = df['Kommentar'].loc[0] # Henter kommentaren som ble lagt inn i Edith sin tabell
     data_som_endres['Log_tid'] = date.datetime.now().strftime('%Y-%m-%d %H:%M:%S') # Legger til kolonne med tidsstempel
     """ Lagrer tidligere verdi før den overskrives for periode t """
-    data_som_endres["Tidligere_verdi"] = data_som_endres[config["perioder"]["t"]["år"]]
-    data_som_endres[config["perioder"]["t"]["år"]] = float(df[config["perioder"]["t"]["år"]].loc[0]) # Å definere det som float() gjør at det ikke blir til bytes i sql databasen
+    data_som_endres["Tidligere_verdi"] = data_som_endres[config["perioder"]["t"]["periode"]]
+    data_som_endres[config["perioder"]["t"]["periode"]] = float(df[config["perioder"]["t"]["periode"]].loc[0]) # Å definere det som float() gjør at det ikke blir til bytes i sql databasen
     print("Dette skal committes til editeringer")
     print(data_som_endres)
 
@@ -402,7 +398,7 @@ def kontroll_offcanvas_innhold(enhet_rad, tabelldata):
 
         print("Henter metadata for",enhet_klikket) 
 
-        df = pd.read_sql(f'SELECT Variabel, {config["perioder"]["t"]["år"]}  AS VERDI FROM {config["tabeller"]["raadata"]} WHERE ORGNR = {str(enhet_klikket)[:9]} AND Variabel IN {metadata}', con=engine).drop_duplicates()
+        df = pd.read_sql(f'SELECT Variabel, {config["perioder"]["t"]["periode"]}  AS VERDI FROM {config["tabeller"]["raadata"]} WHERE ORGNR = {str(enhet_klikket)[:9]} AND Variabel IN {metadata}', con=engine).drop_duplicates()
 
         print(df.head())
         data = df.to_dict("rows")

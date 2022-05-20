@@ -14,12 +14,12 @@ def logg_tabell(url):
     df = pd.read_sql(f"select * from {config['tabeller']['editeringer']}", con=engine)
     df = df[ # Kolonner som listes opp her vil vises i loggføringstabellen
         ["orgnrNavn", "VARIABEL"]
-        + [config["perioder"]["t"]["år"]]
+        + [config["perioder"]["t"]["periode"]]
         + ["Tidligere_verdi", "Kommentar", "Editert_av", "Log_tid"]
     ]
     df = df.rename(columns = { # Hjelper på lesbarhet av tabellen, den brukes ikke til noe per dags dato så har ingen ringvirkninger
-        config["perioder"]["t"]["år"]: "Ny verdi",
-        "Tidligere_verdi": "Opprinnelig verdi" # Kan kanskje endre Tidligere_verdi i oppdater_database(), men egentlig ikke nødvendig
+        config["perioder"]["t"]["periode"]: "Ny verdi",
+        "Tidligere_verdi": "Opprinnelig verdi"
     })
     df = df.sort_values(by = "Log_tid", ascending = False)
     data = df.to_dict('records')
