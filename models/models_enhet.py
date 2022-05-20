@@ -175,7 +175,7 @@ def enhet_plot(orgnrnavn, n_clicks): # Nøkkeltall
     print("Lager nøkkeltall-plot på enhetssiden")
     perioder = {}
     for i in config["perioder"]: # Finnes sikkert en bedre løsning enn dette
-        perioder[i] = config["perioder"][i]["år"] # Må kanskje finne en litt annen måte å gjøre det på hvis kobling av perioder skal skje i funksjonen
+        perioder[i] = config["perioder"][i]["periode"] # Må kanskje finne en litt annen måte å gjøre det på hvis kobling av perioder skal skje i funksjonen
     if n_clicks:
         variabler = config["nøkkeltall_enhetssiden"]
         df = pd.read_sql(f"SELECT * FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and VARIABEL in {tuple(variabler)}", con=engine) # Må skrives om til å hente editerte tall
