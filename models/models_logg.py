@@ -21,7 +21,7 @@ def logg_tabell(url):
         config["perioder"]["t"]["år"]: "Ny verdi",
         "Tidligere_verdi": "Opprinnelig verdi" # Kan kanskje endre Tidligere_verdi i oppdater_database(), men egentlig ikke nødvendig
     })
-    df = df.sort_values(by = "Log_tid")
+    df = df.sort_values(by = "Log_tid", ascending = False)
     data = df.to_dict('records')
     columns = [{'name': i, 'id': i} for i in df.columns]
     print("Laster loggføringstabell til dashbordet")
