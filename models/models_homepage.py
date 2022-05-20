@@ -29,7 +29,7 @@ def klargjor_tbl1_svar(df, dropdown, navn):
         tab['Total'] = tab['R'] + tab['U']
     else:
         tab['Total'] = tab['R']
-    #Prosent    
+    #Prosent
     tab['Prosent editert'] = (tab['R']/tab['Total'])
     tab.reset_index(inplace = True)
     #Erstatter variabel med "navn" er "viktig" eller "alle"
@@ -39,14 +39,6 @@ def klargjor_tbl1_svar(df, dropdown, navn):
     return tab
 
 
-#Callbacks
-
-# Homepage
-"""
-@app.callbacks(Output('plot1', 'figure'),
-               [Input('homepage_dropdown', 'value'),
-                Input('homepage_input', 'value')])
-"""
 def svarinngang_linje(dropdown, input_svarinngang):
     print("Svarinngang - linjeplot")
     if dropdown:
@@ -71,7 +63,7 @@ def svarinngang_linje(dropdown, input_svarinngang):
             df["cumulative"] = df["andel"].cumsum()
             print(df.head(1))
             fig.add_trace(go.Scatter(x = df["INN_DATO"], y = df["cumulative"], name = "Viktig"))
-            
+
             # OBS! Det nedenfor er kun som et eksempel på hvordan man kan inkludere markering for svarfrist o.l. i figuren
             """ Enten kan man lage en dictionary med datoer man ønsker markert, eller koble det til en dataframe """
             timestamps = {
@@ -82,18 +74,14 @@ def svarinngang_linje(dropdown, input_svarinngang):
             for i in timestamps:
                 fig.add_trace(go.Scatter(x = timestamps[i]["dato"], y = [0,1], name = i)) # Bytt ut df["INN_DATO"].mean() med variabel for svarfrist så fungerer det
             # OBS! Det over er kun som et eksempel
-            
+
             return dcc.Graph(id = "linjeplot_svarinngang", figure = fig)
         except: # Siden det er mulig å velge en verdi utenfor de som eksisterer i dataene er det lagt inn feilmelding om dette skjer.
             return html.H5(f"Du har valgt en terskelverdi som er ugyldig. Velg en verdi som er mellom 0 og {int(df.FELT_VERDI.max())} for {dropdown}.")
     else:
         return no_update
-    
-    """
-@app.callbacks(Output('pie', 'figure'),
-               [Input('homepage_dropdown', 'value'),
-                Input('homepage_input', 'value')])
-"""
+
+
 def svarinngang_kake(dropdown, hm_input):
     print("Svarinngang - piechart")
     if dropdown:
@@ -127,17 +115,13 @@ def svarinngang_kake(dropdown, hm_input):
             fig = go.Figure(data =[go.Pie(labels=labels, values = values)])
             graph = dcc.Graph(id = 'pie_plt', figure = fig)
             return graph
-        
+
         else:
             return html.H5("")
     else:
         return no_update
 
-        """
-@app.callbacks(Output('forside-tabell', 'figure'),
-               [Input('homepage_dropdown', 'value'),
-                Input('homepage_input', 'value')])
-"""
+
 def svarinngang_tbl1(dropdown, hm_input):
     print("Svarinngang - tabell")
     if dropdown:
@@ -192,7 +176,7 @@ def svarinngang_tbl1(dropdown, hm_input):
             return no_update
     else:
         return no_update
-    
+
 
 def main():
     print("Sett inn tester her")

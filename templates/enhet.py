@@ -41,7 +41,6 @@ body = html.Div(dbc.Container([
                 options = options_grupp,
                 placeholder = "Velg gruppering",
                 value = [config["default-valg"]["enhet"]["gruppering"]],
-                #className = "dropdownmeny"
             )
         , width = 3),
         dbc.Col(
@@ -51,7 +50,6 @@ body = html.Div(dbc.Container([
                 options = options_var,
                 placeholder = "Velg variabler",
                 value = [config["default-valg"]["enhet"]["gruppering"]],
-                #className = "dropdownmeny"
             )
         , width = 3),
         dbc.Col(
@@ -60,7 +58,6 @@ body = html.Div(dbc.Container([
                 multi = False,
                 options = options_for,
                 placeholder = "Velg foretak",
-                #className = "dropdownmeny" # Må kanskje lage ny class i CSS filen for denne. Den ser stilig ut men blir brukerfiendtlig som den er nå
             )
         , width = 3),
         dbc.Col(

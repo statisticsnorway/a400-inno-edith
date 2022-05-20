@@ -27,8 +27,30 @@ def treeplot(n_click, var, grupp):
     if n_click:
         if len(var) == 1:
             df = pd.read_sql(f'SELECT * FROM {config["tabeller"]["raadata"]} WHERE VARIABEL in ("{var[0]}")', con=engine)
+            try: # Slår sammen editeringer med rådata
+                df_e = pd.read_sql(f'SELECT * FROM {config["tabeller"]["editeringer"]} WHERE VARIABEL in ("{var[0]}")', con=engine)
+                editeringer = True
+            except:
+                editeringer = False
+                print("Ingen endringer er loggført")
+            if editeringer != False:
+                df = pd.concat([df, df_e], ignore_index = True)
+                df = df.sort_values(by="Log_tid", ascending=False)
+                df = df.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")
+            print(df.loc[df["ENHETS_ID"] == '06530257'])
         if len(var) > 1:
             df = pd.read_sql(f"SELECT * FROM {config['tabeller']['raadata']} WHERE VARIABEL in {tuple(var)}", con=engine)
+            try: # Slår sammen editeringer med rådata
+                df_e = pd.read_sql(f'SELECT * FROM {config["tabeller"]["editeringer"]} WHERE VARIABEL in ("{var[0]}")', con=engine)
+                editeringer = True
+            except:
+                editeringer = False
+                print("Ingen endringer er loggført")
+            if editeringer != False:
+                df = pd.concat([df, df_e], ignore_index = True)
+                df = df.sort_values(by="Log_tid", ascending=False)
+                df = df.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")
+            print(df.head())
         df = df.fillna(np.nan)
         fig = px.treemap(df, path = grupp , values = config["perioder"]["t"]["år"])
         graph = dcc.Graph(id = 'treemap', figure = fig)
@@ -44,7 +66,6 @@ def table_grid(data, grupp, clickData):
     perioder = {}
     for i in config["perioder"]: # Finnes sikkert en bedre løsning enn dette
         perioder[i] = config["perioder"][i]["år"] # Må kanskje finne en litt annen måte å gjøre det på hvis kobling av perioder skal skje i funksjonen
-#    str_cols = [config["id_variabel"], config["navn_variabel"], "Variabel"] # Kolonner til tabellen
     str_cols = [config["kombinert_id_navn"], "VARIABEL"]
     num_cols = list(perioder.values())
     """ Setter korrekt datatype til hver kolonne """
@@ -116,7 +137,18 @@ def scatterplot_grid(x, y, checklist, aggregat, clickData):
             tilpasning_til_spørring = tilpasning_til_spørring + aggregering_filter
     spørring = f"SELECT * FROM {config['tabeller']['raadata']} " + tilpasning_til_spørring
     df = pd.read_sql(spørring, con = engine)
-    df = df.loc[(df["VARIABEL"].isin([x, y]))].drop_duplicates(subset=["orgnrNavn", "VARIABEL"], keep="last")
+    spørring_e = f"SELECT * FROM {config['tabeller']['editeringer']} " + tilpasning_til_spørring
+    try: # Slår sammen editeringer med rådata
+        df_e = pd.read_sql(spørring_e, con = engine)
+        editeringer = True
+    except:
+        editeringer = False
+        print("Ingen endringer er loggført")
+    if editeringer != False:
+        df = pd.concat([df, df_e], ignore_index = True)
+        print(df)
+        df = df.sort_values(by="Log_tid", ascending=False)
+    df = df.loc[(df["VARIABEL"].isin([x, y]))].drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")    
     df = df.pivot(index = "orgnrNavn", columns=["VARIABEL"], values = config["perioder"]["t"]["år"])
     df = df[[x, y]].astype(float)
     if checklist != None: # Checklist starter som None
@@ -149,6 +181,18 @@ def histogram_grid(variabel, bins, checklist, aggregat, clickData):
             tilpasning_til_spørring = tilpasning_til_spørring + aggregering_filter
     spørring = f"SELECT * FROM {config['tabeller']['raadata']} " + tilpasning_til_spørring
     df = pd.read_sql(spørring, con = engine)
+    spørring_e = f"SELECT * FROM {config['tabeller']['editeringer']} " + tilpasning_til_spørring
+    try: # Slår sammen editeringer med rådata
+        df_e = pd.read_sql(spørring_e, con = engine)
+        editeringer = True
+    except:
+        editeringer = False
+        print("Ingen endringer er loggført")
+    if editeringer != False:
+        df = pd.concat([df, df_e], ignore_index = True)
+        print(df)
+        df = df.sort_values(by="Log_tid", ascending=False)  
+    df = df.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")
     
     for i in config["perioder"]:
         df[config["perioder"][i]["år"]] = df[config["perioder"][i]["år"]].astype(float)
@@ -192,7 +236,18 @@ def boxplot_grid(variabel, checklist, aggregat, clickData): # Tatt ut av listen:
             tilpasning_til_spørring = tilpasning_til_spørring + aggregering_filter
     spørring = f"SELECT * FROM {config['tabeller']['raadata']} " + tilpasning_til_spørring
     df = pd.read_sql(spørring, con = engine)
-    print("Bearbeider data for boxplot grid")
+    spørring_e = f"SELECT * FROM {config['tabeller']['editeringer']} " + tilpasning_til_spørring
+    try: # Slår sammen editeringer med rådata
+        df_e = pd.read_sql(spørring_e, con = engine)
+        editeringer = True
+    except:
+        editeringer = False
+        print("Ingen endringer er loggført")
+    if editeringer != False:
+        df = pd.concat([df, df_e], ignore_index = True)
+        print(df)
+        df = df.sort_values(by="Log_tid", ascending=False)
+    df = df.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")
     for i in config["perioder"]:
         df[config["perioder"][i]["år"]] = df[config["perioder"][i]["år"]].astype(float)
     if checklist != None: # Checklist starter som None
@@ -204,15 +259,8 @@ def boxplot_grid(variabel, checklist, aggregat, clickData): # Tatt ut av listen:
         fig.add_trace(go.Box(
             y=df[config["perioder"][i]["år"]],
             name=str(config["perioder"][i]["år"]),
-            boxpoints = "all", # boxpoints, # Koblet til dropdown for outliers, foreløpig fungerer den ikke så den kommenteres ut
-            text = df['orgnrNavn'],
-#            marker=dict(
-#                color='rgb(8,81,156)',
-#                outliercolor='rgba(219, 64, 82, 0.6)',
-#                line=dict(
-#                    outliercolor='rgba(219, 64, 82, 0.6)',
-#                    outlierwidth=2)),
-#            line_color='rgb(8,81,156)'
+            boxpoints=boxpoints,
+            text = df['orgnrNavn']
         ))
     fig.update_layout(
         xaxis_title = "Periode",
@@ -246,7 +294,7 @@ def sammenlign_editert_ueditert(timestamp):
     df_re["diff"] = (df_re["År_2021_y"]-df_re["År_2021_x"])/df_re["År_2021_x"]*100
     df_re = df_re.sort_values(by=aggregat, ascending=True)
     df_re.loc[(df_re["diff"] != 0) & (df_re["diff"].notna())]
-    
+
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(x = df_re[aggregat], y = df_re["År_2021_x"], name = "Editerte")

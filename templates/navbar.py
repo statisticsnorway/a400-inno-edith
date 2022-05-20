@@ -5,8 +5,6 @@ def Navbar():
     navbar = dbc.NavbarSimple(
         children=[
             dbc.NavItem(dbc.NavLink("Grid", href="/grid")),
-#            dbc.NavItem(dbc.NavLink("Plots", href="/plots")),
-#            dbc.NavItem(dbc.NavLink("Tidsserie", href="/tidsserie")),
             dbc.NavItem(dbc.NavLink("Enhet", href="/enhet")),
             dbc.NavItem(dbc.NavLink("Logg", href="/logg")),
             dbc.NavItem(dbc.NavLink("Kontrollér", href="/kontroller"))

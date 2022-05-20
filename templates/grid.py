@@ -187,8 +187,10 @@ body = html.Div([dbc.Container([
     ]),
 ], className="container-grid", fluid=True)])
 
-################################################
-# Eksperiment med sammenligne editert/ueditert #
+########################################################
+# Kode for sammenligning av editerte vs uediterte data #
+########################################################
+
 try:
     datoer = pd.read_sql(f"SELECT distinct(Log_tid) FROM {config['tabeller']['editeringer']}", con=engine)
 except:
@@ -211,7 +213,7 @@ sammenligne = dbc.Container(
         html.Div([
             dbc.Accordion([
                 dbc.AccordionItem([
-                    dbc.Row([html.H1("Eksempel på sammenligning av editerte og uediterte")]),
+                    dbc.Row([html.H1("Sammenligning av editerte og uediterte")]),
                     dbc.Row([html.Div(id = "TEST")]),
                     dbc.Row([
                         dbc.Col([
@@ -221,9 +223,6 @@ sammenligne = dbc.Container(
                                 max = int(time.mktime(datoer.max()[0].timetuple())),
                                 value = int(time.mktime(datoer.max()[0].timetuple())),
                                 marks = dager,
-#                                    int(time.mktime(datoer.min()[0].timetuple())): str(datoer.min()[0]),
-#                                    int(time.mktime(datoer.max()[0].timetuple())): str(datoer.max()[0])
-#                                },
                                 tooltip = {
                                     "always_visible": True
                                 }
@@ -240,7 +239,6 @@ sammenligne = dbc.Container(
         ])
     ], className = "container-grid", fluid = True
 )
-################################################
 
 
 def Grid():

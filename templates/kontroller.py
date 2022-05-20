@@ -22,8 +22,8 @@ from templates.navbar import Navbar
 import json
 with open("config.json") as config:
     config = json.load(config)
-  
-    
+
+
 try:
     feilliste_valg = np.insert(pd.read_csv(config['data']['filsti'] + "/feillister_test2.csv", ';')['feilliste'].unique(), 0, 'Alle')
 except:
@@ -41,9 +41,9 @@ nav = Navbar()
 
 
 body = dbc.Container([
-    
+
     dcc.Store(id = 'feilliste_tabell'),
-    
+
     dbc.Row([
         dbc.Col(
             dcc.Dropdown(
@@ -65,22 +65,11 @@ body = dbc.Container([
         )
     ]),
 
-  #  dbc.Row([
-  #      dbc.Col(
-  #          dcc.Dropdown(
-  #              id = 'dropdown_enhet',
-  #              multi = False,
-  #              options = options_enhet,
-  #              placeholder = "Velg orgnr.",
-  #              #className = "dropdownmeny"
-  #          )
-  #      , width = 5)
-  #  ]),
 
     dbc.Row([dbc.Col(html.Div(id = 'figur_feilliste_vars'), width=12)]),
-    
+
     dcc.Store(id = 'kontroll_tabell_enhet'),
-    
+
     dbc.Row([dbc.Col(dbc.ButtonGroup([
 
             dbc.Button('Godta endringer', id='kontroll_editer_enhet_godta'),
@@ -88,13 +77,13 @@ body = dbc.Container([
 
         width=3, style = {'float': 'right'})
     ],justify = 'end'),
-    
+
     dbc.Row(dbc.Col(html.Div(id = 'kontroll_enhet_tabell_div'))),
-    
+
     
 ], className="container-grid", fluid=True)
 
-    
+
 sidebar = html.Div(
     dbc.Offcanvas(
             children = [
@@ -110,8 +99,8 @@ sidebar = html.Div(
             scrollable = True,
             placement = "end"
         )
-)    
-    
+)
+
 def Kontroller():
     layout = html.Div([
         nav,
@@ -119,17 +108,3 @@ def Kontroller():
         sidebar
     ])
     return layout
-
-    
-    
-   
-    
-    
-    
-    
-    
-    
-    
-    
-    
-

@@ -43,23 +43,6 @@ def table(id, data, columns, filterable=True, column_selectable=False):
             page_action = 'native',
             page_size = 100,
             sort_mode = 'multi',
-            #style_as_list_view = True,
-            #style_cell_conditional=[
-            #    {
-            #        'if': {'column_id': c},
-            #        'textAlign': 'left'
-            #    } for c in ['Date', 'Region']
-            #    ],
-            #    style_data_conditional=[
-            #        {
-            #            'if': {'row_index': 'odd'},
-            #            'backgroundColor': 'rgb(248, 248, 248)'
-            #        }
-            #    ],
-            #    style_header={
-            #        'backgroundColor': 'rgb(230, 230, 230)',
-            #        'fontWeight': 'bold'
-            #}
         )
     else:
         tabell = dt.DataTable(
@@ -71,23 +54,6 @@ def table(id, data, columns, filterable=True, column_selectable=False):
             page_action = 'native',
             page_size = 20,
             sort_mode = 'multi',
-            #style_as_list_view = True,
-            #style_cell_conditional=[
-            #    {
-            #        'if': {'column_id': c},
-            #        'textAlign': 'left'
-            #    } for c in ['Date', 'Region']
-            #    ],
-            #    style_data_conditional=[
-            #        {
-            #            'if': {'row_index': 'odd'},
-            #            'backgroundColor': 'rgb(248, 248, 248)'
-            #        }
-            #    ],
-            #    style_header={
-            #        'backgroundColor': 'rgb(230, 230, 230)',
-            #        'fontWeight': 'bold'
-            #}
         )
     return tabell
 

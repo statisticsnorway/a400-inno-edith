@@ -24,7 +24,6 @@ with open("config.json") as config: # Laster in valg fra config.json
 
 nav = Navbar()
 
-#Data
 #henter ut felt_id variabler
 df_opt_var = pd.read_sql(f"SELECT distinct(FELT_ID) FROM {config['tabeller']['svarinngang']}", con=engine) # Skal kanskje rename FELT_ID til noe annet etterhvert?
 options_var = [{'label': x, 'value': x} for x in df_opt_var["FELT_ID"].unique()]
@@ -43,43 +42,7 @@ homepage_input = dcc.Input(id="input_svarinngang",
                           type="number",
                           placeholder="Sett inn grenseverdi",
                           value = 20000)
-"""
-body = dbc.Container(
-    [
-        dbc.Row(
-            [
-                dbc.Col(
-                    [
-                        html.Div(id = 'linje'),
-                    ], width = 6
-                ),
-                dbc.Col([
-                    dbc.Row([
-                        dbc.Col([
-                            dbc.Row([
-                                dbc.Col(homepage_dropdown, width = 5),
-                                dbc.Col(homepage_input, width = 5)
-                            ], style={"padding-top":"10px"})
-                        ])
-                    ]),
-                    dbc.Row([
-                        dbc.Col(
-                            html.Div(id = "pie")
-                        )
-                    ])
-                ], width = 6)
-            ]
-        ),
-        dbc.Row([
-            dbc.Col([
-                html.Div(id = "forside-tabell")
-            ])
-        ])
-    ],
-    className="mt-4",
-)
-#Test den under for å se dropdown/input over hverandre istedenfor side by side
-"""
+
 body = dbc.Container(
     [
         dbc.Row([
@@ -114,8 +77,6 @@ body = dbc.Container(
     ],
     className="container-grid", fluid=True,
 )
-
-
 
 
 

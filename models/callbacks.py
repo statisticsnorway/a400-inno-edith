@@ -9,17 +9,13 @@ import dash
 from models.models_delt import connect
 from models.models_homepage import svarinngang_linje, svarinngang_kake, svarinngang_tbl1, klargjor_tbl1_svar
 from models.models_grid import treeplot, table_grid, scatterplot_grid, histogram_grid, boxplot_grid, sammenlign_editert_ueditert
-#from models.models_plots import bubble_plt_side
 from models.models_enhet import enhetstabell1, enhet_plot, enhetstabell_store, update_columns, enhet_plot_bar_agg, offcanvas_innhold
-#from models.models_tidsserie import display_time_series
 from models.models_logg import logg_tabell
 from models.models_kontroller import feilliste_tabell, innhent_feilliste, oppdater_feilliste_db, model_feilliste_figur, kontroll_enhetstabell_store, kontroll_update_columns, kontroll_enhetstabell, kontroll_offcanvas_innhold
 
 from templates.homepage import Svarinngang
 from templates.navbar import Navbar
-#from templates.tidsserie import Tidsserie
 from templates.grid import Grid
-#from templates.vektet import Plots
 from templates.enhet import Enhet
 from templates.logg import Logg
 from templates.kontroller import Kontroller
@@ -64,17 +60,7 @@ def get_callbacks(app):
             return Kontroller()
         else:
             return Svarinngang()
-    ##############################################
-    # Eksperimentell, sammenligne editert/ueditert.
-    # Ligger på svarinngang siden foreløpig, kan lett flyttes
-    @app.callback(Output("TEST", "children"),
-                  Input("slider", "value"))
-    def TEST(click):
-        print(click)
-        return html.H1(str(click))
 
-
-    ##############################################
     ###############
     # Svarinngang #
     ###############
@@ -226,19 +212,6 @@ def get_callbacks(app):
 
 
     #########
-    # Plots #
-    #########
-    @app.callback(Output('bubble_div_side', 'children'),
-                  [Input('submit_table', 'n_clicks'),
-                   State('x', 'value'),
-                   State('y', 'value'),
-                   State('color', 'value'),
-                   State('values', 'value')])
-    def bubble_plot_side(n_click, x, y, color, values):
-        return bubble_plt_side(n_click, x, y, color, values)
-
-
-    #########
     # Enhet #
     #########
 
@@ -263,16 +236,6 @@ def get_callbacks(app):
     def enhetsgraf1_clb(orgnrnavn, n_click):
         return enhet_plot(orgnrnavn, n_click)
 
-    """
-    @app.callback(Output('enhetsgraf_div2', 'children'),
-                  Input('submit_table_enhet', 'n_clicks'),
-                  Input('editer_enhet', 'n_clicks'),
-                  Input('table3', 'data'),
-                  Input('table3', 'selected_columns'),
-                 State('var_enhet', 'value'))
-    def enhetsgraf2_clb(n_clicks, n_clicks_enhet, data, kol_ed, var):
-        return enhet_plot_bar_var(n_clicks, n_clicks_enhet, data, kol_ed, var)
-    """
     @app.callback(Output('enhetsgraf_div2', 'children'),
                   Output('enhetsgraf_div3', 'children'),
                   Output('editer_enhet', 'n_clicks'),
@@ -332,20 +295,6 @@ def get_callbacks(app):
     def show_log_table(data):
         return logg_tabell(data)
 
-    #############
-    # Tidsserie #
-    #############
-
-    @app.callback(
-        Output("tidsserie_figur", "children"),
-        [
-            Input("tid_aggregering", "value"),
-            Input("tid_variable", "value")
-        ]
-    )
-    def disp_time_series(agg, var):
-        return display_time_series(agg, var)
-
     ##############
     # Kontroller #
     ##############
@@ -403,29 +352,6 @@ def get_callbacks(app):
         return kontroll_enhetstabell(enhet_rad, data)
 
 
-
-
-
-    '''
-    #### De med dropdown
-    #Tabell for enhet på kontroll-side
-    @app.callback(Output('kontroll_tabell_enhet', 'data'),
-                  [
-                      Input('dropdown_enhet', 'value'),
-                  ])
-    def kontroll_enhetsdata_clb(org):
-        return kontroll_enhetstabell_store(org)
-
-    @app.callback(Output('kontroll_enhet_tabell_div', 'children'),
-                  Input('dropdown_enhet', 'value'),
-                  Input('kontroll_tabell_enhet', 'data'))
-    def kontroll_enhetstabell_clb(n_clicks, data):
-        #print(dash.callback_context.inputs_list)
-        return kontroll_enhetstabell(n_clicks, data)
-    '''
-
-
-
     @app.callback(
         [Output('kontroll_enhet_tabell', 'data')],
         [Output('kontroll_enhet_tabell', 'columns')],
@@ -461,16 +387,3 @@ def get_callbacks(app):
     def vis_kontroll_offcanvas_innhold(enhet_rad, tabelldata):
         print(dash.callback_context.inputs_list)
         return kontroll_offcanvas_innhold(enhet_rad, tabelldata)
-
-
-    '''
-    @app.callback(
-        Output("kontroll_offcanvas", "children"),
-        [
-            Input('dropdown_enhet', 'value')
-        ]
-    )
-    def vis_kontroll_offcanvas_innhold(foretak):
-        print(dash.callback_context.inputs_list)
-        return kontroll_offcanvas_innhold(foretak)
-    '''
