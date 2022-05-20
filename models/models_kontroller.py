@@ -26,6 +26,8 @@ import sqlite3
 from sqlalchemy import create_engine
 import datetime as date
 from flask import request # for brukernavn
+import getpass
+
 
 '''
 @app.callback(
@@ -205,8 +207,6 @@ def oppdater_feilliste_db(data):
 '''
 
 def kontroll_enhetstabell_store(enhet_rad, tabelldata): # Sett inn dette , variabel
-    #if org:
-    #org = org[0:9]
     print("enhetstabell_store")
     print("valgt: ", enhet_rad)
 
@@ -220,24 +220,28 @@ def kontroll_enhetstabell_store(enhet_rad, tabelldata): # Sett inn dette , varia
     enhet_klikket_orgnrnavn = enhet_klikket + ": " + enhet_klikket_navn
     print("Valgt enhet: ",enhet_klikket_orgnrnavn)
 
-
     variabler = tuple(config_variabler["variabler"])
     print(variabler)
-    #df = pd.read_sql(f"SELECT * FROM {config['tabeller']['raadata']} WHERE OrgnrNavn = '{org}'", con=engine)
+
     df = pd.read_sql(f"SELECT * FROM {config['tabeller']['raadata']} WHERE OrgnrNavn = '{enhet_klikket_orgnrnavn}' AND Variabel IN {variabler}", con=engine)
-
-    print(df.head())
-    if False is True:# Denne må gjøres conditional på om editeringer eksisterer? 
-        df_e = pd.read_sql(f"select * from editeringer WHERE orgnrNavn = '{org}'", con=engine) 
-
-        print(df_e.head())
-        df = pd.concat([df, df_e])
+    
+    try: # Denne koden skal slå sammen editeringer med rådata, men det fungerer ikke enda. Må testes mer.
+        df_e = pd.read_sql(f"select * from editeringer WHERE orgnrNavn = '{enhet_klikket_orgnrnavn}'", con=engine)
+        editeringer = True
+    except:
+        editeringer = False
+        print("Ingen endringer er loggført")
+    if editeringer != False:
+        df = pd.concat([df, df_e], ignore_index = True)
         df = df.sort_values(by="Log_tid", ascending=False)
-        df = df.drop_duplicates(subset=["VARIABEL", "OrgnrNavn"], keep="first")
-        print(df)
+        print("sånn ser sorteringen ut")
+        print(df.head())
+        df = df.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")    
+    
+        print(df.head())
     data = df.to_dict('rows')
     columns = [{'name': i, 'id': i} for i in df.columns]
-    return data #table(id = 'table3', data = data, columns = columns)
+    return data
 
 '''
 @app.callback(Output('kontroll_enhet_tabell_div', 'children'),
@@ -254,10 +258,12 @@ def kontroll_enhetstabell(enhet_rad, data):
         df = pd.DataFrame().from_dict(data)
         print("enhetstabell")
         print(df.head())
-        df = df[[config["id_variabel"], config["navn_variabel"], "VARIABEL"] + list(perioder.values())]
-        df["Editert_av"] = request.authorization["username"]
-        df["Kommentar"] = ""
-        df = df.dropna(subset=[config["perioder"]["t"]["periode"], config["perioder"]["t-1"]["periode"], config["perioder"]["t-2"]["periode"]]).drop_duplicates().reset_index(drop=True)
+        if "Editert_av" in df.columns:
+             df = df[[config["id_variabel"], config["navn_variabel"], "VARIABEL"] + list(perioder.values()) + ["Editert_av", "Kommentar"]]
+        else:
+            df = df[[config["id_variabel"], config["navn_variabel"], "VARIABEL"] + list(perioder.values())]                
+            df["Kommentar"] = ""
+        df = df.dropna(subset=perioder.values()).drop_duplicates().reset_index(drop=True)
         data = df.to_dict('rows')
         """ Definerer hvilke kolonner som skal være selekterbare, og hvilke som ikke skal være det """
         columns = [{'name': i, 'id': i, 'on_change': {'action': 'validate'}, 'selectable': True} if i in set([config["perioder"]["t"]["periode"], 'Vekt']) 
@@ -335,7 +341,7 @@ def oppdater_database(df): # Funksjon for å lagre editering og loggføre bruker
     variabel = df['VARIABEL'].loc[0]
     data_som_endres = pd.read_sql(f"SELECT * from {config['tabeller']['raadata']} WHERE {config['id_variabel']} = '{enhet}' and Variabel ='{variabel}'", con=engine) # Leser inn hele raden med tidligere data
     #del data_som_endres['index'] # Fjerner unødvendige kolonner
-    data_som_endres['Editert_av'] = df['Editert_av'].loc[0] # Henter info om hvem som editerte fra Edith sin tabell
+    data_som_endres['Editert_av'] = getpass.getuser() # Henter info om hvem som editerte
     data_som_endres['Kommentar'] = df['Kommentar'].loc[0] # Henter kommentaren som ble lagt inn i Edith sin tabell
     data_som_endres['Log_tid'] = date.datetime.now().strftime('%Y-%m-%d %H:%M:%S') # Legger til kolonne med tidsstempel
     """ Lagrer tidligere verdi før den overskrives for periode t """
@@ -358,7 +364,16 @@ def oppdater_database(df): # Funksjon for å lagre editering og loggføre bruker
     antall = antall[:-1] # fjerner siste "," så listen blir riktig
     print(kolonner)
     print(antall)
+    
+    """ Oppretter editeringer tabell hvis den ikke allerede eksisterer """
+    tabeller = pd.read_sql("SELECT name FROM sqlite_master  WHERE type='table'", con=engine)
+    if "editeringer" not in tabeller["name"].unique():
+        c = conn.cursor()
+        c.execute(f'''CREATE TABLE {config["tabeller"]["editeringer"]}({kolonner})''')
+        conn.commit()
 
+    #dersom int64-variabler lastes inn uten denne, blir variabeltypen lagret i feil format i sqlite-databasen
+    sqlite3.register_adapter(np.int64, lambda val: int(val))
     """ Setter inn i editeringer tabellen """
     sqlite_insert_query = f"""INSERT INTO editeringer
             ({kolonner})
@@ -387,10 +402,9 @@ def kontroll_offcanvas_innhold(enhet_rad, tabelldata):
 
         print("Henter metadata for",enhet_klikket) 
 
-        #df = pd.read_sql(f'SELECT Kommentar FROM {config["tabeller"]["editeringer"]} WHERE ORGNR = {str(foretak)[:9]}', con=engine)
         df = pd.read_sql(f'SELECT Variabel, {config["perioder"]["t"]["periode"]}  AS VERDI FROM {config["tabeller"]["raadata"]} WHERE ORGNR = {str(enhet_klikket)[:9]} AND Variabel IN {metadata}', con=engine).drop_duplicates()
 
-        print(df)
+        print(df.head())
         data = df.to_dict("rows")
         columns = [{'name': i, 'id': i} for i in df.columns]
         print(data)

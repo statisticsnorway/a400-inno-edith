@@ -19,9 +19,9 @@ def logg_tabell(url):
     ]
     df = df.rename(columns = { # Hjelper på lesbarhet av tabellen, den brukes ikke til noe per dags dato så har ingen ringvirkninger
         config["perioder"]["t"]["periode"]: "Ny verdi",
-        "Tidligere_verdi": "Tidligere verdi"
+        "Tidligere_verdi": "Opprinnelig verdi"
     })
-    df = df.sort_values(by = "Log_tid")
+    df = df.sort_values(by = "Log_tid", ascending = False)
     data = df.to_dict('records')
     columns = [{'name': i, 'id': i} for i in df.columns]
     print("Laster loggføringstabell til dashbordet")
