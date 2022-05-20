@@ -1,12 +1,11 @@
 {
-    "undersøkelse":"Fou",
+    "undersøkelse":"",
     "brukernavn": "",
     "perioder":
         {
             "t":{
                 "delreg": ,
-                "år": "",
-                "år_til_år": ""
+                "periode": ""
             }
         },
     "aggregater":
@@ -20,9 +19,6 @@
         [
             ""
         ],
-    "variabel_navn": {
-        "gammelt navn": "nytt navn"
-    },
     "data":{
         "filsti": ""
     },

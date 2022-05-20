@@ -10,12 +10,12 @@ import dash_core_components as dcc
 import json
 
 with open("config.json") as config: # Laster in valg fra config.json
-    code = json.load(config)
+    config = json.load(config)
 
 #Funksjon som kobler opp mot .sqlite
 def connect():
-    conn = sqlite3.connect(f"{code['data']['filsti']}/edith.sqlite", timeout=15) #Må endres hvis koblingen skal være opp mot dynarev
-    engine = create_engine(f"sqlite:///{code['data']['filsti']}/edith.sqlite")
+    conn = sqlite3.connect(f"{config['data']['filsti']}/edith.sqlite", timeout=15) #Må endres hvis koblingen skal være opp mot dynarev
+    engine = create_engine(f"sqlite:///{config['data']['filsti']}/edith.sqlite")
     db = SQLAlchemy()
     return conn, engine, db
 
@@ -60,7 +60,7 @@ def table(id, data, columns, filterable=True, column_selectable=False):
 def main():
     import pandas as pd
     conn, engine, db = connect()
-    print(pd.read_sql(f"select * from {code['tabeller']['raadata']}", con = engine).head())
+    print(pd.read_sql(f"select * from {config['tabeller']['raadata']}", con = engine).head())
     print("Sett inn tester her")
 
 if __name__ == "__main__":
