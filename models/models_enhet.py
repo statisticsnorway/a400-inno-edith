@@ -173,13 +173,24 @@ def oppdater_database(df): # Funksjon for å lagre editering og loggføre bruker
 
 def enhet_plot(orgnrnavn, n_clicks): # Nøkkeltall
     print("Lager nøkkeltall-plot på enhetssiden")
-    perioder = ""
+    perioder = {}
     for i in config["perioder"]: # Finnes sikkert en bedre løsning enn dette
-        perioder = perioder + str(config["perioder"][i]["år"]) + str(", ")
-    perioder = perioder[:-2] # fjerner siste ", " så listen blir riktig
+        perioder[i] = config["perioder"][i]["år"] # Må kanskje finne en litt annen måte å gjøre det på hvis kobling av perioder skal skje i funksjonen
     if n_clicks:
         variabler = config["nøkkeltall_enhetssiden"]
-        df = pd.read_sql(f"SELECT VARIABEL, {perioder} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and VARIABEL in {tuple(variabler)}", con=engine) # Må skrives om til å hente editerte tall
+        df = pd.read_sql(f"SELECT * FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and VARIABEL in {tuple(variabler)}", con=engine) # Må skrives om til å hente editerte tall
+        try: # Slår sammen editeringer med rådata
+            df_e = pd.read_sql(f"SELECT * FROM {config['tabeller']['editeringer']} WHERE OrgNrNavn = '{orgnrnavn}' and VARIABEL in {tuple(variabler)}", con=engine) # Må skrives om til å hente editerte tall
+            editeringer = True
+        except:
+            editeringer = False
+            print("Ingen endringer er loggført")
+        if editeringer != False:
+            df = pd.concat([df, df_e], ignore_index = True)
+            print(df)
+            df = df.sort_values(by="Log_tid", ascending=False)
+            df = df.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")
+        df = df[["VARIABEL"] + list(perioder.values())]
         # Start - midlertidig fiks på feil datatype i kolonne. Fjernes når kolonner har riktig verdi i sqlite
         perioder = []
         for i in config["perioder"]:
