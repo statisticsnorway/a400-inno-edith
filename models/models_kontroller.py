@@ -43,7 +43,7 @@ def innhent_feilliste(liste):
     df['feilliste'] = df['feilliste'].str.replace(',', '') #Tar bort eventuelle komma i feilliste-kolonnen da det ikke funker med dropdown
 
     #Tar bort kommentarkolonnen som er lagret i databasen hvis det ikke ligger inne en tabell fra inneværende statistikkår
-    t = config["perioder"]["t"]["periode"]
+    t = str(config["perioder"]["t"]["delreg"])
     df['orgnr'] = df['orgnr'].astype(object).astype(str)
 
     if 'feilliste_kommentar' + t in pd.read_sql('SELECT name from sqlite_master where type= "table"', con=engine)['name'].tolist():
@@ -187,17 +187,16 @@ def model_feilliste_figur(enhet_rad, tabelldata,feilliste):
         return fig_feilliste_var
 
 
-def oppdater_feilliste_db(data):  
-    t = config["perioder"]["t"]["delreg"]
+def oppdater_feilliste_db(data):
+    t = str(config["perioder"]["t"]["delreg"])
+    print("Oppdaterer feilliste-fil i db - " + 'Tabell: feilliste_kommentar' + t)
     df = pd.DataFrame().from_dict(data)
     print(df.head())
     if 'feilliste' in df: #Bare for å teste om det ikke er en tom df
-        feillister_kommentar = df[['kommentar','feilliste','orgnr']]
-
+        feillister_kommentar = df[['kommentar','feilliste','orgnr']].astype(str)
          #For å unngå at radene forsvinner etter at man subsetter på feilliste blir radene "appended" og dubletter fjernes etterpå
         feillister_kommentar.to_sql('feilliste_kommentar' + t, con = engine, if_exists = 'append', chunksize = None)
         pd.read_sql(f"SELECT * from feilliste_kommentar{t} WHERE kommentar IS NOT NULL", con=engine).drop('index', axis = 1).drop_duplicates(subset = ['orgnr', 'feilliste'], keep='last').to_sql('feilliste_kommentar' + t, con = engine, if_exists = 'replace')
-
 
 '''
 @app.callback(Output('kontroll_tabell_enhet', 'data'),
@@ -234,10 +233,7 @@ def kontroll_enhetstabell_store(enhet_rad, tabelldata): # Sett inn dette , varia
     if editeringer != False:
         df = pd.concat([df, df_e], ignore_index = True)
         df = df.sort_values(by="Log_tid", ascending=False)
-        print("sånn ser sorteringen ut")
-        print(df.head())
         df = df.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")    
-    
         print(df.head())
     data = df.to_dict('rows')
     columns = [{'name': i, 'id': i} for i in df.columns]
