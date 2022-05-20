@@ -234,16 +234,16 @@ def enhet_plot_bar_agg(data, kol_ed, var, grupp, orgnrnavn, n_clicks):
         grupp_var = pd.read_sql(f"SELECT {grupp} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and VARIABEL = '{var[0]}'", con=engine).loc[0,grupp]
         spørring = f"SELECT VARIABEL, "
         for i in config["perioder"]:
-            spørring += f"SUM({config['perioder'][i]['år']}), "
-            spørring += f"{config['perioder'][i]['år']}, "
+            spørring += f"SUM({config['perioder'][i]['periode']}), "
+            spørring += f"{config['perioder'][i]['periode']}, "
         spørring += f"{grupp} FROM {config['tabeller']['raadata']} WHERE {grupp} = '{grupp_var}' and VARIABEL = '{var[0]}' and OrgnrNavn NOT IN ('{orgnrnavn}') GROUP BY VARIABEL"
         df_grupp = pd.read_sql(spørring, con = engine)
     else: # Hvis var er mer enn ett element må det skrives som en tuple i SQL spørringen
         grupp_var = pd.read_sql(f"SELECT {grupp} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and VARIABEL IN {tuple(var)}", con=engine).loc[0,grupp]
         spørring = f"SELECT VARIABEL, "
         for i in config["perioder"]:
-            spørring += f"SUM({config['perioder'][i]['år']}), "
-            spørring += f"{config['perioder'][i]['år']}, "
+            spørring += f"SUM({config['perioder'][i]['periode']}), "
+            spørring += f"{config['perioder'][i]['periode']}, "
         spørring += f"{grupp} FROM {config['tabeller']['raadata']} WHERE {grupp} = '{grupp_var}' and VARIABEL IN {tuple(var)} and OrgnrNavn NOT IN ('{orgnrnavn}') GROUP BY VARIABEL"
         df_grupp = pd.read_sql(spørring, con = engine)
     df = pd.DataFrame().from_dict(data)
