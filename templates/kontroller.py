@@ -27,12 +27,12 @@ with open("config.json") as config:
 try:
     #Kan ha med "alle" hvis ikke det er en for store fil til at appen henger
     #feilliste_valg = np.insert(pd.read_csv(config['data']['filsti'] + "/feilliste.csv")['feilliste'].unique(), 0, 'Alle')
-    feilliste_valg_csv = pd.read_csv(config['data']['filsti'] + "/feilliste.csv")['feilliste'].unique()
+    feilliste_valg = pd.read_csv(config['data']['filsti'] + "/feilliste.csv")['feilliste'].unique()
 except:
     feilliste_valg = ["Ingen feillister tilgjengelig"]
 
-feilliste_valg = [item.replace(',', '') for item in feilliste_valg_csv]
-options_grupp = [{'label': x, 'value': x} for x in feilliste_valg_csv]
+feilliste_valg = [item.replace(',', '') for item in feilliste_valg]
+options_grupp = [{'label': x, 'value': x} for x in feilliste_valg]
 
 
 # Input enhet
