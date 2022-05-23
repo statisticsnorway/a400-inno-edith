@@ -139,7 +139,7 @@ def model_feilliste_figur(enhet_rad, tabelldata,feilliste):
         print("Feilliste valgt: ", feilliste_valgt)
 
         df_feilliste = pd.read_csv(config['data']['filsti'] + "/feilliste.csv")
-        df_feilliste['feilliste'] = df_feilliste['feilliste'].str.replace(',', '.')
+        df_feilliste['feilliste'] = df_feilliste['feilliste'].str.replace(',', '')
         df_feilliste_valgt = df_feilliste[df_feilliste['feilliste'].isin(feilliste)]
         df_feilliste_valgt = df_feilliste_valgt.dropna(axis=1, how = 'all')
         feilliste_vars = df_feilliste_valgt.columns.tolist()
@@ -163,7 +163,7 @@ def model_feilliste_figur(enhet_rad, tabelldata,feilliste):
         df_enhet_relevant_vars = df_enhet_relevant_vars[["VARIABEL"] + list(perioder.values())]
         df_enhet_relevant_vars = df_enhet_relevant_vars.melt(id_vars=["VARIABEL"], var_name="periode", value_name="Verdi").sort_values(["VARIABEL", "periode"])
 
-        df_enhet_relevant_vars['Verdi'] = df_enhet_relevant_vars['Verdi'].str.replace(',', '').astype(float)
+        df_enhet_relevant_vars['Verdi'] = df_enhet_relevant_vars['Verdi'].str.replace(',', '.').astype(float)
 
 
         ("Data som skal inn i figuren, riktig format:")
