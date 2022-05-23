@@ -25,7 +25,7 @@ with open("config.json") as config:
 
 
 try:
-    feilliste_valg = np.insert(pd.read_csv(config['data']['filsti'] + "/feillister_test2.csv", ';')['feilliste'].unique(), 0, 'Alle')
+    feilliste_valg = np.insert(pd.read_csv(config['data']['filsti'] + "/feilliste.csv")['feilliste'].unique(), 0, 'Alle')
 except:
     feilliste_valg = ["Ingen feillister tilgjengelig"]
 
