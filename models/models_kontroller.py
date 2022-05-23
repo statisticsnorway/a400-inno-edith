@@ -51,7 +51,7 @@ def innhent_feilliste(liste):
         print('Kommentar hentes fra db')
 
     #Henter kommentarkolonnen fra databasen
-        feilliste_kommentar = pd.read_sql(f"SELECT * from feilliste_kommentar{t} WHERE kommentar IS NOT NULL", con=engine)
+        feilliste_kommentar = pd.read_sql(f"SELECT * from feilliste_kommentar{t} WHERE kommentar IS NOT NULL", con=engine).drop('index', axis = 1)
 
         df = pd.merge(df, feilliste_kommentar, how = "left", on = ['feilliste','ORGNR'])
         cols = df.columns.drop('kommentar').tolist()
@@ -139,7 +139,7 @@ def model_feilliste_figur(enhet_rad, tabelldata,feilliste):
         print("Feilliste valgt: ", feilliste_valgt)
 
         df_feilliste = pd.read_csv(config['data']['filsti'] + "/feilliste.csv")
-        df_feilliste['feilliste'] = df_feilliste['feilliste'].str.replace(',', '')
+        df_feilliste['feilliste'] = df_feilliste['feilliste'].str.replace(',', '.')
         df_feilliste_valgt = df_feilliste[df_feilliste['feilliste'].isin(feilliste)]
         df_feilliste_valgt = df_feilliste_valgt.dropna(axis=1, how = 'all')
         feilliste_vars = df_feilliste_valgt.columns.tolist()
