@@ -25,17 +25,20 @@ with open("config.json") as config:
 
 
 try:
-    feilliste_valg = np.insert(pd.read_csv(config['data']['filsti'] + "/feilliste.csv")['feilliste'].unique(), 0, 'Alle')
+    #Kan ha med "alle" hvis ikke det er en for store fil til at appen henger
+    #feilliste_valg = np.insert(pd.read_csv(config['data']['filsti'] + "/feilliste.csv")['feilliste'].unique(), 0, 'Alle')
+    feilliste_valg_csv = pd.read_csv(config['data']['filsti'] + "/feilliste.csv")['feilliste'].unique()
 except:
     feilliste_valg = ["Ingen feillister tilgjengelig"]
 
-feilliste_valg = [item.replace(',', '') for item in feilliste_valg]
-options_grupp = [{'label': x, 'value': x} for x in feilliste_valg]
+feilliste_valg = [item.replace(',', '') for item in feilliste_valg_csv]
+options_grupp = [{'label': x, 'value': x} for x in feilliste_valg_csv]
 
 
 # Input enhet
 df_opt_foretak = pd.read_sql(f"SELECT distinct(orgnrNavn) FROM {config['tabeller']['raadata']}", con=engine) # Henter ut unike orgnrNavn
 options_enhet = [{'label': x, 'value': x} for x in df_opt_foretak["orgnrNavn"]] # Lager {'label': 'value'} par for hvert unikt orgnrNavn
+
 
 nav = Navbar()
 
@@ -51,7 +54,7 @@ body = dbc.Container([
                 multi = True,
                 options = options_grupp,
                 placeholder = "Velg feilliste",
-                value = 'Alle',
+                value = [feilliste_valg[0]],
                 #className = "dropdownmeny"
             )
         , width = 5),

@@ -21,6 +21,8 @@ conn, engine, db = connect()
 with open("config.json") as config: # Laster in valg fra config.json
     config = json.load(config)
 
+with open("variabler.json") as variabler:
+    config_variabler = json.load(variabler)
 
 nav = Navbar()
 
@@ -35,7 +37,7 @@ homepage_dropdown = dcc.Dropdown(
                 multi = False,
                 options = options_var,
                 placeholder = "Velg variabel",
-                value = 'intfou',
+                value = config_variabler["variabler"][0], #Første variabel i config som default-verdi
                 className = "dropdownmeny")
 
 homepage_input = dcc.Input(id="input_svarinngang",
