@@ -21,29 +21,34 @@ conn, engine, db = connect()
 with open("config.json") as config: # Laster in valg fra config.json
     config = json.load(config)
 
-with open("variabler.json") as variabler:
+with open("variabler.json") as variabler: # Laster inn valg fra variabler
     config_variabler = json.load(variabler)
 
 nav = Navbar()
 
 #henter ut felt_id variabler
 df_opt_var = pd.read_sql(f"SELECT distinct(FELT_ID) FROM {config['tabeller']['svarinngang']}", con=engine) # Skal kanskje rename FELT_ID til noe annet etterhvert?
-options_var = [{'label': x, 'value': x} for x in df_opt_var["FELT_ID"].unique()]
+options_var = [{'label': x, 'value': x} for x in sorted(df_opt_var["FELT_ID"].unique())]  # Sorted gjør at dropdown sorteres alfabetisk. 
 
-df_svar = pd.read_sql(f'SELECT * from {config["tabeller"]["svarinngang"]}', con=engine, parse_dates=['INN_DATO'])
+df_svar = pd.read_sql(f'SELECT * from {config["tabeller"]["svarinngang"]}', con=engine, parse_dates=['INN_DATO']) # Dataframe for svarinngang
 
+
+# Lager dropdwon på svarinngangen. Legger inn første variabel i config som default. 
 homepage_dropdown = dcc.Dropdown(
                 id = 'dropdown_svarinngang',
                 multi = False,
                 options = options_var,
-                placeholder = "Velg variabel",
-                value = config_variabler["variabler"][0], #Første variabel i config som default-verdi
+                placeholder = "Velg variabel", # Denne blir synlig når default variabelen fjernes. 
+                value = config_variabler["variabler"][0], # Første variabel i config som default-verdi
                 className = "dropdownmeny")
 
 homepage_input = dcc.Input(id="input_svarinngang",
                           type="number",
                           placeholder="Sett inn grenseverdi",
-                          value = 20000)
+                          value = 20000)  # Default verdi, kan endres etter individuelle behov. 
+
+# Koden nedenfor er ren dashprogrammering for layout av svarinngangen For ytterligere informasjon, sjekk ut denne linken: .
+# https://dash-bootstrap-components.opensource.faculty.ai/docs/
 
 body = dbc.Container(
     [
