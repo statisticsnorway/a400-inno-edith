@@ -24,6 +24,7 @@ with open("config.json") as config: # Laster in valg fra config.json
 
 
 def treeplot(n_click, var, grupp):
+    print("Lager treeplot - grid")
     if n_click:
         if len(var) == 1:
             df = pd.read_sql(f'SELECT * FROM {config["tabeller"]["raadata"]} WHERE VARIABEL in ("{var[0]}")', con=engine)
@@ -37,7 +38,6 @@ def treeplot(n_click, var, grupp):
                 df = pd.concat([df, df_e], ignore_index = True)
                 df = df.sort_values(by="Log_tid", ascending=False)
                 df = df.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")
-            print(df.loc[df["ENHETS_ID"] == '06530257'])
         if len(var) > 1:
             df = pd.read_sql(f"SELECT * FROM {config['tabeller']['raadata']} WHERE VARIABEL in {tuple(var)}", con=engine)
             try: # Slår sammen editeringer med rådata
@@ -50,14 +50,42 @@ def treeplot(n_click, var, grupp):
                 df = pd.concat([df, df_e], ignore_index = True)
                 df = df.sort_values(by="Log_tid", ascending=False)
                 df = df.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")
-            print(df.head())
-        df = df.fillna(np.nan)
+        df = df.fillna("MANGLER") # Fjern dette
         fig = px.treemap(df, path = grupp , values = config["perioder"]["t"]["periode"])
         graph = dcc.Graph(id = 'treemap', figure = fig)
         data = df.to_dict('rows')
         return graph, data
     else:
         return no_update
+
+
+# Dette er ikke en callback, men brukes i callbacks som styres av clickdata fra treemap
+def treemap_clickdata_sjekk(grupp, clickData):
+    print(" Clickdata ")
+    print("")
+    print("clickdata er: " + str(clickData))
+    print()
+    nivå = None
+    aggregater = None
+    if clickData == None: # Er det ingen clickdata er man på øverste nivå, fordi man ikke har drillet nedover.
+        nivå = "topp"
+    else: # Eksisterer clickData så sjekkes innholdet mer
+        if "points" in clickData:
+            if "id" in clickData["points"][0]:
+                aggregater = clickData["points"][0]["id"].split("/") # Siden id variabelen er en string med hvilke verdier man har klikket på separert med / gjøres det om til en liste
+                if "entry" not in clickData["points"][0]: # Iblant bugger clickData seg ut om du klikker deg opp igjen for fort
+                    aggregater = aggregater[:-1] # Løses vanligvis med at siste aggregat droppes fra listen
+                elif clickData["points"][0]["entry"] == aggregater[-1]: # Du kan klikke deg oppover ved å klikke på samme rute som du klikket inn i, derfor viktig å sjekke om entry-point er samme rute som nederste aggregat i listen
+                    aggregater = aggregater[:-1]
+                if len(aggregater) == len(grupp): # Sjekker om man er på nederste nivå
+                    nivå = "enhet"
+        else:
+            nivå = "topp" # Hvis id ikke er i clickData så har man sannsynligvis navigert seg til toppen igjen
+    print("Nivå er: " + str(nivå))
+    print()
+    print("Aggregater er: " + str(aggregater))
+    print()
+    return nivå, aggregater
 
 
 def table_grid(data, grupp, clickData):
@@ -91,25 +119,14 @@ def table_grid(data, grupp, clickData):
 
     """ clickData håndtering """
     """ Finner ut hvilket nivå clickdata fra treemap peker til """
-    nivå = None
-    if clickData == None: # Er det ingen clickdata er man på øverste nivå, fordi man ikke har drillet nedover.
-        nivå = "topp"
-    else: # Eksisterer clickData så sjekkes innholdet mer
-        if "id" in clickData["points"][0]:
-            aggregater = clickData["points"][0]["id"].split("/") # Siden id variabelen er en string med hvilke verdier man har klikket på separert med / gjøres det om til en liste
-            if "entry" not in clickData["points"][0]: # Iblant bugger clickData seg ut om du klikker deg opp igjen for fort
-                aggregater = aggregater[:-1] # Løses vanligvis med at siste aggregat droppes fra listen
-            elif clickData["points"][0]["entry"] == aggregater[-1]: # Du kan klikke deg oppover ved å klikke på samme rute som du klikket inn i, derfor viktig å sjekke om entry-point er samme rute som nederste aggregat i listen
-                aggregater = aggregater[:-1]
-            if len(aggregater) == len(grupp): # Sjekker om man er på nederste nivå
-                nivå = "enhet"
-        else:
-            nivå = "topp" # Hvis id ikke er i clickData så har man sannsynligvis navigert seg til toppen igjen
+    nivå, aggregater = treemap_clickdata_sjekk(grupp, clickData)
 
     """ Lager riktig data til tabellen """
     if nivå != "topp":
-        for i in range(len(aggregater)): # Looper gjennom en filtrering 1 gang per nivå
-            df = df.loc[df[grupp[i]] == aggregater[i]]
+        if aggregater is not None:
+            for i in range(len(aggregater)): # Looper gjennom en filtrering 1 gang per nivå
+                if aggregater[i] != None:
+                    df = df.loc[df[grupp[i]] == aggregater[i]]
     df = df[grupp + str_cols + num_cols]
     if nivå != "enhet": # Så lenge det ikke er på enhetsnivå så skal det aggregeres
         df = df.groupby(grupp+["VARIABEL"]).agg({i : "sum" for i in num_cols}).reset_index()
@@ -124,24 +141,15 @@ def scatterplot_grid(x, y, checklist, aggregat, clickData):
     tilpasning_til_spørring = ""
     variabel_filter = f"WHERE VARIABEL in {tuple([x]+[y])} "
     tilpasning_til_spørring = tilpasning_til_spørring + variabel_filter
-    """ Finner ut hvilket nivå clickdata fra treemap peker til """
-    nivå = None
-    if clickData == None: # Er det ingen clickdata er man på øverste nivå, fordi man ikke har drillet nedover.
-        nivå = "topp"
-    else: # Eksisterer clickData så sjekkes innholdet mer
-        if "id" in clickData["points"][0]:
-            aggregater = clickData["points"][0]["id"].split("/") # Siden id variabelen er en string med hvilke verdier man har klikket på separert med / gjøres det om til en liste
-            if "entry" not in clickData["points"][0]: # Iblant bugger clickData seg ut om du klikker deg opp igjen for fort
-                aggregater = aggregater[:-1] # Løses vanligvis med at siste aggregat droppes fra listen
-            elif clickData["points"][0]["entry"] == aggregater[-1]: # Du kan klikke deg oppover ved å klikke på samme rute som du klikket inn i, derfor viktig å sjekke om entry-point er samme rute som nederste aggregat i listen
-                aggregater = aggregater[:-1]
-            if len(aggregater) == len(grupp): # Sjekker om man er på nederste nivå
-                nivå = "enhet"
-        else:
-            nivå = "topp" # Hvis id ikke er i clickData så har man sannsynligvis navigert seg til toppen igjen
-    # Bruker klikkdata for å lage SQL spørring
+    
+    # Finner ut hvilket nivå clickdata fra treemap peker til 
+    nivå, aggregater = treemap_clickdata_sjekk(aggregat, clickData)
 
-    if nivå != None or "topp":
+    # Bruker klikkdata for å lage SQL spørring
+    print("")
+    print("Nivå er: " + str(nivå))
+    print("")
+    if nivå != "topp" or None:
         aggregering_filter = "" # Skal bruke denne for å lage en SQL spørring som en string for å filtrere datasettet
         for i in range(len(clickData["points"][0]["id"].split("/"))): # Splitter clickdata sin id basert på / 
             aggregering_filter = aggregering_filter \
@@ -152,20 +160,7 @@ def scatterplot_grid(x, y, checklist, aggregat, clickData):
             + "' " # \ på slutten er bare for å markere linjeskifte, gjør koden som lager stringen bittelitt mer leselig
         tilpasning_til_spørring = tilpasning_til_spørring + aggregering_filter
     spørring = f"SELECT * FROM {config['tabeller']['raadata']} " + tilpasning_til_spørring
-    """
-    if clickData != None:
-        if "entry" in clickData["points"][0]:
-            aggregering_filter = "" # Skal bruke denne for å lage en SQL spørring som en string for å filtrere datasettet
-            for i in range(len(clickData["points"][0]["id"].split("/"))): # Splitter clickdata sin id basert på / 
-                aggregering_filter = aggregering_filter \
-                + "AND " \
-                + str(aggregat[i]) \
-                + " = '" \
-                + str(clickData["points"][0]["id"].split("/")[i]) \
-                + "' " # \ på slutten er bare for å markere linjeskifte, gjør koden som lager stringen bittelitt mer leselig
-            tilpasning_til_spørring = tilpasning_til_spørring + aggregering_filter
-    spørring = f"SELECT * FROM {config['tabeller']['raadata']} " + tilpasning_til_spørring
-    """
+
     df = pd.read_sql(spørring, con = engine)
     spørring_e = f"SELECT * FROM {config['tabeller']['editeringer']} " + tilpasning_til_spørring
     try: # Slår sammen editeringer med rådata
@@ -186,8 +181,11 @@ def scatterplot_grid(x, y, checklist, aggregat, clickData):
             df = df.loc[df[x] > 0]
             df = df.loc[df[y] > 0]
     fig = px.scatter(df,x = x,y = y, hover_name = df.index, trendline="ols")
+    tittel = f"Forholdet mellom {x} og {y}"
+    if nivå != "topp" or None:
+        tittel = tittel + f" blant {aggregater}"
     fig.update_layout(
-        title = f"Forholdet mellom {x} og {y}"
+        title = tittel
     )
     return dcc.Graph(id = "scatter_grid",figure=fig)
 
@@ -302,14 +300,10 @@ def sammenlign_editert_ueditert(timestamp):
     print("Sammenligne")
     aggregat = "ORG_FORM"
     variabel = "INTFOU"
-    print("Sammenligne1")
     df_editert = pd.read_sql(f'SELECT * FROM {config["tabeller"]["editeringer"]}', con=engine)
     df_editert["Log_tid"] = pd.to_datetime(df_editert["Log_tid"])
-    print("Sammenligne2")
     df_editert = df_editert.loc[df_editert["Log_tid"] <= datetime.fromtimestamp(timestamp)]
-    print("Sammenligne3")
     df = pd.read_sql(f'SELECT * FROM {config["tabeller"]["raadata"]} WHERE Variabel = "{variabel}"', con=engine)
-    print("Sammenligne4")
     dff = pd.concat([df, df_editert])
     dff = dff.sort_values(by="Log_tid", ascending=False)
     dff = dff.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")
