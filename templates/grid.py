@@ -30,7 +30,7 @@ nav = Navbar()
 df_opt_var = pd.read_sql(f"SELECT distinct(VARIABEL) FROM {config['tabeller']['raadata']}", con=engine)
 options_var = [{'label': x, 'value': x} for x in sorted(df_opt_var["VARIABEL"].unique())]  # Variabler i dropdown for "velg_variabler"
 
-options_grupp = [{'label': x, 'value': x} for x in sorted(config["aggregater"])]  # Variabler i aggregat meny "velg aggregering"
+options_grupp = [{'label': x, 'value': x} for x in sorted((config["aggregater"]))]  # Variabler i aggregat meny "velg aggregering"
 
 
 # Koden nedenfor er ren dash-prgrammering. Ytterligere informasjon finnes i dokumentasjonen:
