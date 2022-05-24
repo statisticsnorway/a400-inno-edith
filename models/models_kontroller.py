@@ -51,7 +51,7 @@ def innhent_feilliste(liste):
         print('Kommentar hentes fra db')
 
     #Henter kommentarkolonnen fra databasen
-        feilliste_kommentar = pd.read_sql(f"SELECT * from feilliste_kommentar{t} WHERE kommentar IS NOT NULL", con=engine)
+        feilliste_kommentar = pd.read_sql(f"SELECT * from feilliste_kommentar{t} WHERE kommentar IS NOT NULL", con=engine).drop('index', axis = 1)
 
         df = pd.merge(df, feilliste_kommentar, how = "left", on = ['feilliste','ORGNR'])
         cols = df.columns.drop('kommentar').tolist()
@@ -163,7 +163,7 @@ def model_feilliste_figur(enhet_rad, tabelldata,feilliste):
         df_enhet_relevant_vars = df_enhet_relevant_vars[["VARIABEL"] + list(perioder.values())]
         df_enhet_relevant_vars = df_enhet_relevant_vars.melt(id_vars=["VARIABEL"], var_name="periode", value_name="Verdi").sort_values(["VARIABEL", "periode"])
 
-        df_enhet_relevant_vars['Verdi'] = df_enhet_relevant_vars['Verdi'].str.replace(',', '').astype(float)
+        df_enhet_relevant_vars['Verdi'] = df_enhet_relevant_vars['Verdi'].str.replace(',', '.').astype(float)
 
 
         ("Data som skal inn i figuren, riktig format:")

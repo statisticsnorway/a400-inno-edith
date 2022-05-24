@@ -73,7 +73,7 @@ body = dbc.Container([
     dbc.Row([dbc.Col(dbc.ButtonGroup([
 
             dbc.Button('Godta endringer', id='kontroll_editer_enhet_godta'),
-            dbc.Button("Åpne kommentarfelt foretak", id="kontroll_offcanvas_knapp", n_clicks=0)]), 
+            dbc.Button("Enhetsopplysninger", id="kontroll_offcanvas_knapp", n_clicks=0)]), 
 
         width=3, style = {'float': 'right'})
     ],justify = 'end'),
