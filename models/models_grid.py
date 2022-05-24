@@ -124,7 +124,35 @@ def scatterplot_grid(x, y, checklist, aggregat, clickData):
     tilpasning_til_spørring = ""
     variabel_filter = f"WHERE VARIABEL in {tuple([x]+[y])} "
     tilpasning_til_spørring = tilpasning_til_spørring + variabel_filter
+    """ Finner ut hvilket nivå clickdata fra treemap peker til """
+    nivå = None
+    if clickData == None: # Er det ingen clickdata er man på øverste nivå, fordi man ikke har drillet nedover.
+        nivå = "topp"
+    else: # Eksisterer clickData så sjekkes innholdet mer
+        if "id" in clickData["points"][0]:
+            aggregater = clickData["points"][0]["id"].split("/") # Siden id variabelen er en string med hvilke verdier man har klikket på separert med / gjøres det om til en liste
+            if "entry" not in clickData["points"][0]: # Iblant bugger clickData seg ut om du klikker deg opp igjen for fort
+                aggregater = aggregater[:-1] # Løses vanligvis med at siste aggregat droppes fra listen
+            elif clickData["points"][0]["entry"] == aggregater[-1]: # Du kan klikke deg oppover ved å klikke på samme rute som du klikket inn i, derfor viktig å sjekke om entry-point er samme rute som nederste aggregat i listen
+                aggregater = aggregater[:-1]
+            if len(aggregater) == len(grupp): # Sjekker om man er på nederste nivå
+                nivå = "enhet"
+        else:
+            nivå = "topp" # Hvis id ikke er i clickData så har man sannsynligvis navigert seg til toppen igjen
+    # Bruker klikkdata for å lage SQL spørring
 
+    if nivå != None or "topp":
+        aggregering_filter = "" # Skal bruke denne for å lage en SQL spørring som en string for å filtrere datasettet
+        for i in range(len(clickData["points"][0]["id"].split("/"))): # Splitter clickdata sin id basert på / 
+            aggregering_filter = aggregering_filter \
+            + "AND " \
+            + str(aggregat[i]) \
+            + " = '" \
+            + str(clickData["points"][0]["id"].split("/")[i]) \
+            + "' " # \ på slutten er bare for å markere linjeskifte, gjør koden som lager stringen bittelitt mer leselig
+        tilpasning_til_spørring = tilpasning_til_spørring + aggregering_filter
+    spørring = f"SELECT * FROM {config['tabeller']['raadata']} " + tilpasning_til_spørring
+    """
     if clickData != None:
         if "entry" in clickData["points"][0]:
             aggregering_filter = "" # Skal bruke denne for å lage en SQL spørring som en string for å filtrere datasettet
@@ -137,6 +165,7 @@ def scatterplot_grid(x, y, checklist, aggregat, clickData):
                 + "' " # \ på slutten er bare for å markere linjeskifte, gjør koden som lager stringen bittelitt mer leselig
             tilpasning_til_spørring = tilpasning_til_spørring + aggregering_filter
     spørring = f"SELECT * FROM {config['tabeller']['raadata']} " + tilpasning_til_spørring
+    """
     df = pd.read_sql(spørring, con = engine)
     spørring_e = f"SELECT * FROM {config['tabeller']['editeringer']} " + tilpasning_til_spørring
     try: # Slår sammen editeringer med rådata
@@ -260,7 +289,6 @@ def boxplot_grid(variabel, checklist, aggregat, clickData): # Tatt ut av listen:
         fig.add_trace(go.Box(
             y=df[config["perioder"][i]["periode"]],
             name=str(config["perioder"][i]["periode"]),
-            boxpoints=boxpoints,
             text = df['orgnrNavn']
         ))
     fig.update_layout(
@@ -287,21 +315,21 @@ def sammenlign_editert_ueditert(timestamp):
     dff = dff.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")
     df = df.loc[df["VARIABEL"] == variabel]
     dff = dff.loc[dff["VARIABEL"] == variabel]
-    df["År_2021"] = df["År_2021"].astype("float")
-    dff["År_2021"] = dff["År_2021"].astype("float")
+    df[config["perioder"]["t"]["periode"]] = df[config["perioder"]["t"]["periode"]].astype("float")
+    dff[config["perioder"]["t"]["periode"]] = dff[config["perioder"]["t"]["periode"]].astype("float")
     df_r = df.groupby([aggregat, "VARIABEL"]).sum().reset_index()
     df_e = dff.groupby([aggregat, "VARIABEL"]).sum().reset_index()
     df_re = pd.merge(df_r, df_e, on = [aggregat, "VARIABEL"])
-    df_re["diff"] = (df_re["År_2021_y"]-df_re["År_2021_x"])/df_re["År_2021_x"]*100
+    df_re["diff"] = (df_re[f'{config["perioder"]["t"]["periode"]}_y']-df_re[f'{config["perioder"]["t"]["periode"]}_x'])/df_re[f'{config["perioder"]["t"]["periode"]}_x']*100
     df_re = df_re.sort_values(by=aggregat, ascending=True)
     df_re.loc[(df_re["diff"] != 0) & (df_re["diff"].notna())]
 
     fig = go.Figure()
     fig.add_trace(
-        go.Scatter(x = df_re[aggregat], y = df_re["År_2021_x"], name = "Editerte")
+        go.Scatter(x = df_re[aggregat], y = df_re[f'{config["perioder"]["t"]["periode"]}_x'], name = "Editerte")
     )
     fig.add_trace(
-        go.Scatter(x = df_re[aggregat], y = df_re["År_2021_y"], name = "Før editering")
+        go.Scatter(x = df_re[aggregat], y = df_re[f'{config["perioder"]["t"]["periode"]}_y'], name = "Før editering")
     )
     fig.update_layout(title = "Editerte vs rådata sammenligning etter aggregat")
     fig2 = go.Figure()

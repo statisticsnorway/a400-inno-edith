@@ -143,14 +143,15 @@ body = html.Div([dbc.Container([
                     dbc.Tab([
                         dbc.Row([html.Div(id = "boxplot_div_grid")]),
                         dbc.Row([
-                            dbc.Col(
+                            dbc.Col([
+                                "Variabel til boxplot",
                                 dcc.Dropdown(
                                     id = "variabel_boxplot_grid",
                                     options = options_var,
                                     placeholder = "Velg variabel",
                                     className = "egendropdown"
                                 )
-                            ),
+                            ]),
 #                            dbc.Col( # Dropdown for outliers, foreløpig fungerer den ikke så den kommenteres ut
 #                                dcc.Dropdown(
 #                                    id = "boxpoints_boxplot_grid",
