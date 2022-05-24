@@ -39,26 +39,26 @@ def innhent_feilliste(liste):
     #Leser inn fil
     print('Leser csv')
     print(liste)
-    df = pd.read_csv(config['data']['filsti'] + "/feillister_test2.csv", ';')
+    df = pd.read_csv(config['data']['filsti'] + "/feilliste.csv")
     df['feilliste'] = df['feilliste'].str.replace(',', '') #Tar bort eventuelle komma i feilliste-kolonnen da det ikke funker med dropdown
 
     #Tar bort kommentarkolonnen som er lagret i databasen hvis det ikke ligger inne en tabell fra inneværende statistikkår
-    t = config["perioder"]["t"]["periode"]
-    df['orgnr'] = df['orgnr'].astype(object).astype(str)
+    t = str(config["perioder"]["t"]["delreg"])
+    df['ORGNR'] = df['ORGNR'].astype(object).astype(str)
 
     if 'feilliste_kommentar' + t in pd.read_sql('SELECT name from sqlite_master where type= "table"', con=engine)['name'].tolist():
         df = df.drop("kommentar", axis = 1)
         print('Kommentar hentes fra db')
 
     #Henter kommentarkolonnen fra databasen
-        feilliste_kommentar = pd.read_sql(f"SELECT * from feilliste_kommentar{t} WHERE kommentar IS NOT NULL", con=engine)
+        feilliste_kommentar = pd.read_sql(f"SELECT * from feilliste_kommentar{t} WHERE kommentar IS NOT NULL", con=engine).drop('index', axis = 1)
 
-        df = pd.merge(df, feilliste_kommentar, how = "left", on = ['feilliste','orgnr'])
+        df = pd.merge(df, feilliste_kommentar, how = "left", on = ['feilliste','ORGNR'])
         cols = df.columns.drop('kommentar').tolist()
         df = df[['kommentar'] + cols]
     else:
         #Kommentarer lastes inn i databasen
-        feillister_kommentar = df[['kommentar','feilliste','orgnr']]
+        feillister_kommentar = df[['kommentar','feilliste','ORGNR']]
         feillister_kommentar.to_sql('feilliste_kommentar' + t, con = engine, if_exists = 'append', chunksize = None)
 
     #Bearbeider og fikser variabeltyper
@@ -71,7 +71,7 @@ def innhent_feilliste(liste):
         if (True in list(df_str[col].str.contains('[A-Za-z]', regex = True))) is False:
             col_list.append(col)
     df[col_list] = df[col_list].replace(',', '.', regex=True).astype(float)
-    df['orgnr'] = df['orgnr'].astype(object).astype(str)
+    df['ORGNR'] = df['ORGNR'].astype(object).astype(str)
     df['kommentar'] = df['kommentar'].fillna('.') #fyller inn for å gjøre det mulig å filtrere bort de som er sjekket
 
     print(df.head())
@@ -90,7 +90,7 @@ def feilliste_tabell(url, valgt_feilliste):
 
     data = df.to_dict('records')
     columns = [{'name': i, 'id': i}
-              if i == "org_nr" or i == "orgnr" or i == "nace07" or i == "feilliste"
+              if i == "org_nr" or i == "ORGNR" or i == "nace07" or i == "feilliste"
               else {'name': i, 'id': i, "editable": True} if i == "kommentar"
               else {"name": i, "id": i, "hideable": True}
               for i in df.columns]
@@ -120,13 +120,13 @@ def model_feilliste_figur(enhet_rad, tabelldata,feilliste):
 
         # Henter ut orgnr basert på valgt rad (celle som er klikket på)
         valgt_rad          = tabelldata[enhet_rad["row"]]
-        enhet_klikket      = valgt_rad["orgnr"]
-        enhet_klikket_navn = valgt_rad["navn"]
+        enhet_klikket      = valgt_rad["ORGNR"]
+        enhet_klikket_navn = valgt_rad["NAVN"]
         enhet_klikket_orgnrnavn = enhet_klikket + ": " + enhet_klikket_navn
         print("Valgt enhet: ",enhet_klikket_orgnrnavn)
 
         # Henter fra delreg basert på valgt orgnr. ---
-        df_enhet = pd.read_sql(f"SELECT * FROM {config['tabeller']['raadata']} WHERE Orgnr = '{enhet_klikket}'", con=engine)
+        df_enhet = pd.read_sql(f"SELECT * FROM {config['tabeller']['raadata']} WHERE ORGNR = '{enhet_klikket}'", con=engine)
         print("Data for enheten: ")
         print(df_enhet)
 
@@ -138,7 +138,7 @@ def model_feilliste_figur(enhet_rad, tabelldata,feilliste):
         feilliste_valgt = feilliste
         print("Feilliste valgt: ", feilliste_valgt)
 
-        df_feilliste = pd.read_csv(config['data']['filsti'] + "/feillister_test2.csv", ';')
+        df_feilliste = pd.read_csv(config['data']['filsti'] + "/feilliste.csv")
         df_feilliste['feilliste'] = df_feilliste['feilliste'].str.replace(',', '')
         df_feilliste_valgt = df_feilliste[df_feilliste['feilliste'].isin(feilliste)]
         df_feilliste_valgt = df_feilliste_valgt.dropna(axis=1, how = 'all')
@@ -163,7 +163,7 @@ def model_feilliste_figur(enhet_rad, tabelldata,feilliste):
         df_enhet_relevant_vars = df_enhet_relevant_vars[["VARIABEL"] + list(perioder.values())]
         df_enhet_relevant_vars = df_enhet_relevant_vars.melt(id_vars=["VARIABEL"], var_name="periode", value_name="Verdi").sort_values(["VARIABEL", "periode"])
 
-        df_enhet_relevant_vars['Verdi'] = df_enhet_relevant_vars['Verdi'].str.replace(',', '').astype(float)
+        df_enhet_relevant_vars['Verdi'] = df_enhet_relevant_vars['Verdi'].str.replace(',', '.').astype(float)
 
 
         ("Data som skal inn i figuren, riktig format:")
@@ -187,17 +187,16 @@ def model_feilliste_figur(enhet_rad, tabelldata,feilliste):
         return fig_feilliste_var
 
 
-def oppdater_feilliste_db(data):  
-    t = config["perioder"]["t"]["delreg"]
+def oppdater_feilliste_db(data):
+    t = str(config["perioder"]["t"]["delreg"])
+    print("Oppdaterer feilliste-fil i db - " + 'Tabell: feilliste_kommentar' + t)
     df = pd.DataFrame().from_dict(data)
     print(df.head())
     if 'feilliste' in df: #Bare for å teste om det ikke er en tom df
-        feillister_kommentar = df[['kommentar','feilliste','orgnr']]
-
+        feillister_kommentar = df[['kommentar','feilliste','ORGNR']].astype(str)
          #For å unngå at radene forsvinner etter at man subsetter på feilliste blir radene "appended" og dubletter fjernes etterpå
         feillister_kommentar.to_sql('feilliste_kommentar' + t, con = engine, if_exists = 'append', chunksize = None)
-        pd.read_sql(f"SELECT * from feilliste_kommentar{t} WHERE kommentar IS NOT NULL", con=engine).drop('index', axis = 1).drop_duplicates(subset = ['orgnr', 'feilliste'], keep='last').to_sql('feilliste_kommentar' + t, con = engine, if_exists = 'replace')
-
+        pd.read_sql(f"SELECT * from feilliste_kommentar{t} WHERE kommentar IS NOT NULL", con=engine).drop('index', axis = 1).drop_duplicates(subset = ['ORGNR', 'feilliste'], keep='last').to_sql('feilliste_kommentar' + t, con = engine, if_exists = 'replace')
 
 '''
 @app.callback(Output('kontroll_tabell_enhet', 'data'),
@@ -215,8 +214,8 @@ def kontroll_enhetstabell_store(enhet_rad, tabelldata): # Sett inn dette , varia
 
     # Henter ut orgnr basert på valgt rad (celle som er klikket på)
     valgt_rad          = tabelldata[enhet_rad["row"]]
-    enhet_klikket      = valgt_rad["orgnr"]
-    enhet_klikket_navn = valgt_rad["navn"]
+    enhet_klikket      = valgt_rad["ORGNR"]
+    enhet_klikket_navn = valgt_rad["NAVN"]
     enhet_klikket_orgnrnavn = enhet_klikket + ": " + enhet_klikket_navn
     print("Valgt enhet: ",enhet_klikket_orgnrnavn)
 
@@ -234,10 +233,7 @@ def kontroll_enhetstabell_store(enhet_rad, tabelldata): # Sett inn dette , varia
     if editeringer != False:
         df = pd.concat([df, df_e], ignore_index = True)
         df = df.sort_values(by="Log_tid", ascending=False)
-        print("sånn ser sorteringen ut")
-        print(df.head())
         df = df.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")    
-    
         print(df.head())
     data = df.to_dict('rows')
     columns = [{'name': i, 'id': i} for i in df.columns]
@@ -394,8 +390,8 @@ def kontroll_offcanvas_innhold(enhet_rad, tabelldata):
 
         # Henter ut orgnr basert på valgt rad (celle som er klikket på)
         valgt_rad          = tabelldata[enhet_rad["row"]]
-        enhet_klikket      = valgt_rad["orgnr"]
-        enhet_klikket_navn = valgt_rad["navn"]
+        enhet_klikket      = valgt_rad["ORGNR"]
+        enhet_klikket_navn = valgt_rad["NAVN"]
         enhet_klikket_orgnrnavn = enhet_klikket + ": " + enhet_klikket_navn
         print("enhet_klikket", enhet_klikket)
         print("Valgt enhet: ",enhet_klikket_orgnrnavn)

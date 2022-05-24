@@ -25,7 +25,7 @@ with open("config.json") as config:
 
 
 try:
-    feilliste_valg = np.insert(pd.read_csv(config['data']['filsti'] + "/feillister_test2.csv", ';')['feilliste'].unique(), 0, 'Alle')
+    feilliste_valg = np.insert(pd.read_csv(config['data']['filsti'] + "/feilliste.csv")['feilliste'].unique(), 0, 'Alle')
 except:
     feilliste_valg = ["Ingen feillister tilgjengelig"]
 
@@ -73,7 +73,7 @@ body = dbc.Container([
     dbc.Row([dbc.Col(dbc.ButtonGroup([
 
             dbc.Button('Godta endringer', id='kontroll_editer_enhet_godta'),
-            dbc.Button("Åpne kommentarfelt foretak", id="kontroll_offcanvas_knapp", n_clicks=0)]), 
+            dbc.Button("Enhetsopplysninger", id="kontroll_offcanvas_knapp", n_clicks=0)]), 
 
         width=3, style = {'float': 'right'})
     ],justify = 'end'),

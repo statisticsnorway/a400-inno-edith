@@ -75,7 +75,7 @@ body = html.Div(dbc.Container([
             dbc.ButtonGroup([
                 dbc.Button('Editer', id='editer_enhet'),
                 dbc.Button('Godta endringer', id='editer_enhet_godta'),
-                dbc.Button("Åpne kommentarfelt foretak", id="offcanvas_knapp", n_clicks=0)
+                dbc.Button("Enhetsopplysninger", id="offcanvas_knapp", n_clicks=0)
             ]), 
             width=4, style = {'float': 'right'})
     ],justify = 'end'),
