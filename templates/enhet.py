@@ -22,13 +22,17 @@ with open("config.json") as config: # Laster in valg fra config.json
 
 nav = Navbar()
 df_opt_var = pd.read_sql(f"SELECT distinct(Variabel) FROM {config['tabeller']['raadata']}", con=engine)
-options_var = [{'label': x, 'value': x} for x in df_opt_var["VARIABEL"].unique()]
+options_var = [{'label': x, 'value': x} for x in sorted(df_opt_var["VARIABEL"].unique())]  # Dictionary for dropdown "Velg variabler"
 
 df_opt_foretak = pd.read_sql(f"SELECT distinct(orgnrNavn) FROM {config['tabeller']['raadata']}", con=engine) # Henter ut unike orgnrNavn
 options_for = [{'label': x, 'value': x} for x in df_opt_foretak["orgnrNavn"]] # Lager {'label': 'value'} par for hvert unikt orgnrNavn
 
+# Options_for kan med fordel sorteres med hensyn på på navn. For å gjøre dette må dette legges inn en litt mer avansert sortering enn normalt, slik at den sorterer alfabetisk basert på navn, og ser forbi orgnummeret i starten av hver rad
 
-options_grupp = [{'label': x, 'value': x} for x in config["aggregater"]]
+options_grupp = [{'label': x, 'value': x} for x in sorted(config["aggregater"])]  # Dictionary for aggregater
+
+# Nedenfor er det ren dash programmering. Dokumentasjon kan finnes her:
+# https://dash-bootstrap-components.opensource.faculty.ai/
 
 body = html.Div(dbc.Container([
     dcc.Store(id = 'table3_enhet'),
