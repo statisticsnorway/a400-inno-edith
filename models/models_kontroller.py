@@ -72,7 +72,7 @@ def innhent_feilliste(liste):
             col_list.append(col)
     df[col_list] = df[col_list].replace(',', '.', regex=True).astype(float)
     df['ORGNR'] = df['ORGNR'].astype(object).astype(str)
-    df['kommentar'] = df['kommentar'].fillna('.') #fyller inn for å gjøre det mulig å filtrere bort de som er sjekket
+    df['kommentar'] = df['kommentar'].fillna('-') #fyller inn for å gjøre det mulig å filtrere bort de som er sjekket
 
     print(df.head())
     #Avhengig av hvilken liste som velges i dropdown hentes variabler
