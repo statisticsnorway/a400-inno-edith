@@ -19,6 +19,12 @@ conn, engine, db = connect()
 
 nav = Navbar()
 
+# Koden nedenfor er ren Dash programmering. Dokumentasjon finnes her:
+# https://dash-bootstrap-components.opensource.faculty.ai/
+
+# Lager en tabell for oversikt over editerte data
+
+
 body = dbc.Container([
     dcc.Store(id = 'logg_data'),
     dbc.Row([

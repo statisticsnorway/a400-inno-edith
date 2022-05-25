@@ -1,5 +1,7 @@
 import dash_bootstrap_components as dbc
 
+# Dokumentasjon for Navbar ligger her:
+# https://dash-bootstrap-components.opensource.faculty.ai/docs/components/navbar/
 
 def Navbar():
     navbar = dbc.NavbarSimple(
