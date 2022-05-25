@@ -24,7 +24,7 @@ def klargjor_tbl1_svar(df, dropdown, navn):
     tab = df.groupby(['FELT_ID', 'REV_KODE'])[['FELT_VERDI']].count()
     #pivoterer
     tab = tab.pivot_table(index="FELT_ID", columns="REV_KODE", values="FELT_VERDI")
-    #Om det eksisterer U tar den summen av R og U eller er total bare R
+    #Om det eksisterer U tar den summen av R og U eller er total bare R. U står for urevidert, R står for revidert.
     if 'U' in tab:
         tab['Total'] = tab['R'] + tab['U']
     else:
@@ -46,6 +46,7 @@ def svarinngang_linje(dropdown, input_svarinngang):
         """
         Hvis appen blir treig av å måtte laste inn data kan det eventuelt splittes opp slik at den henter inn data til en
         dcc.Store, som deretter hentes inn av hver enkelt funksjon. Det vil redusere antallet SQL spørringer en god del.
+        input_svarinngang: Verdi for hva som anses for terkelverid av hva som defineres som viktig enhet. 
         """
         df = pd.read_sql(f"SELECT * from {config['tabeller']['svarinngang']} WHERE FELT_ID = '{dropdown.upper()}'", con=engine, parse_dates=['INN_DATO'])
         print(df.head(1))
@@ -54,21 +55,21 @@ def svarinngang_linje(dropdown, input_svarinngang):
             fig = go.Figure() # Lager grafobjektet for plotly
             """ Lager linje for uviktige enheter """
             df["andel"] = 1/len(df)
-            df["cumulative"] = df["andel"].cumsum()
+            df["cumulative"] = df["andel"].cumsum()  # Prosenvis andel uviktige enheter
             print(df.head(1))
             fig.add_trace(go.Scatter(x = df["INN_DATO"], y = df["cumulative"], name = "Uviktig"))
             """ Lager linje for viktige enheter """
             df = df.loc[df["FELT_VERDI"] > input_svarinngang]
             df["andel"] = 1/len(df)
-            df["cumulative"] = df["andel"].cumsum()
+            df["cumulative"] = df["andel"].cumsum()  # Prosenvis andel viktige enheter
             print(df.head(1))
-            fig.add_trace(go.Scatter(x = df["INN_DATO"], y = df["cumulative"], name = "Viktig"))
+            fig.add_trace(go.Scatter(x = df["INN_DATO"], y = df["cumulative"], name = "Viktig"))  # Lager trappeplot
 
             # OBS! Det nedenfor er kun som et eksempel på hvordan man kan inkludere markering for svarfrist o.l. i figuren
             """ Enten kan man lage en dictionary med datoer man ønsker markert, eller koble det til en dataframe """
             timestamps = {
                 "Svarfrist": {
-                    "dato": [df["INN_DATO"].mean(), df["INN_DATO"].mean()]
+                    "dato": [df["INN_DATO"].mean(), df["INN_DATO"].mean()] # Beregner svarfristen som gjennomsnittet av når dataene kommer inn.c
                 }
             }
             for i in timestamps:
@@ -85,7 +86,7 @@ def svarinngang_linje(dropdown, input_svarinngang):
 def svarinngang_kake(dropdown, hm_input):
     print("Svarinngang - piechart")
     if dropdown:
-        #Henter ut data basert på dropdown
+        #Henter ut data basert på dropdown. Her genereres pie-chartet. 
         #dette kan forbedres. Det hentes ut samme data 3 steder, for linje, kake og tabell. Det burde heller hentes ut en gang og lagres i en store som det så burde hentes fra.
         df = pd.read_sql(f"SELECT * from svarinngang WHERE FELT_ID = '{dropdown.upper()}'", con=engine, parse_dates=['INN_DATO', 'REV_DATO']) 
         #Erstatter ved bruk av loc
@@ -93,7 +94,7 @@ def svarinngang_kake(dropdown, hm_input):
         df.loc[df['REV_DATO'].notnull(), 'editert'] = 'E'
 
         #df = pd.DataFrame(df)
-        df['FELT_VERDI'] = df['FELT_VERDI'].fillna(0)
+        df['FELT_VERDI'] = df['FELT_VERDI'].fillna(0)  # Bytter ut NaN med 0
         if hm_input <= df.FELT_VERDI.max():
             conditions = [
                 (df["FELT_ID"].eq(str(dropdown).upper()) & df["FELT_VERDI"].ge(int(hm_input)) & df["editert"].eq("E")),
