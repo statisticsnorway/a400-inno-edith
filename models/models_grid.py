@@ -51,7 +51,7 @@ def treeplot(n_click, var, grupp):
                 df = pd.concat([df, df_e], ignore_index = True)
                 df = df.sort_values(by="Log_tid", ascending=False)
                 df = df.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")
-        df = df.fillna("MANGLER") # Fjern dette
+        df["NACE1"] = df["NACE1"].fillna("MANGLER") # Fjern dette
         fig = px.treemap(df, path = grupp , values = config["perioder"]["t"]["periode"])
         graph = dcc.Graph(id = 'treemap', figure = fig)
         data = df.to_dict('rows')
