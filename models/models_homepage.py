@@ -83,13 +83,16 @@ def svarinngang_linje(dropdown, input_svarinngang):
         return no_update
 
 
-def svarinngang_kake(dropdown, hm_input):
+def svarinngang_kake(dropdown, hm_input): 
+    """
+    hm_input: Input for grenseverdi 
+    """
     print("Svarinngang - piechart")
     if dropdown:
         #Henter ut data basert på dropdown. Her genereres pie-chartet. 
-        #dette kan forbedres. Det hentes ut samme data 3 steder, for linje, kake og tabell. Det burde heller hentes ut en gang og lagres i en store som det så burde hentes fra.
+        #dette kan forbedres. Det hentes ut samme data 3 steder, for linje, kake og tabell. Det burde heller hentes ut en gang og lagres i en store som det så burde hentes fra. 
         df = pd.read_sql(f"SELECT * from svarinngang WHERE FELT_ID = '{dropdown.upper()}'", con=engine, parse_dates=['INN_DATO', 'REV_DATO']) 
-        #Erstatter ved bruk av loc
+        #Erstatter ved bruk av loc. E=Editert, IE = Ikke Editert
         df.loc[df['REV_DATO'].isnull(),'editert'] = 'IE'
         df.loc[df['REV_DATO'].notnull(), 'editert'] = 'E'
 
@@ -97,15 +100,17 @@ def svarinngang_kake(dropdown, hm_input):
         df['FELT_VERDI'] = df['FELT_VERDI'].fillna(0)  # Bytter ut NaN med 0
         if hm_input <= df.FELT_VERDI.max():
             conditions = [
-                (df["FELT_ID"].eq(str(dropdown).upper()) & df["FELT_VERDI"].ge(int(hm_input)) & df["editert"].eq("E")),
+                (df["FELT_ID"].eq(str(dropdown).upper()) & df["FELT_VERDI"].ge(int(hm_input)) & df["editert"].eq("E")), 
                 (df["FELT_ID"].eq(str(dropdown).upper()) & df["FELT_VERDI"].ge(int(hm_input)) & df["editert"].eq("IE")),
                 (df["FELT_ID"].eq(str(dropdown).upper()) & df["FELT_VERDI"].lt(int(hm_input)) & df["editert"].eq("E")),
                 (df["FELT_ID"].eq(str(dropdown).upper()) & df["FELT_VERDI"].lt(int(hm_input)) & df["editert"].eq("IE"))
-            ]
+            ] # Ulike filtere for å definere viktige og utviktige editerte og ikke-editerte enheter. 
+              # ge - greater or equal.
+              # lt - lower than
+              # eq - equal
             choices = ["Viktig editert", "Viktig ikke editert", "Uviktig editert", "Uviktig ikke editert"]
 
             #Gir gruppene label etter viktighet og editering
-
             df["gruppe_editert"] = np.select(conditions, choices)
 
 
@@ -113,7 +118,7 @@ def svarinngang_kake(dropdown, hm_input):
             labels = df['gruppe_editert'].value_counts().index
             values = df['gruppe_editert'].value_counts().values
 
-            fig = go.Figure(data =[go.Pie(labels=labels, values = values)])
+            fig = go.Figure(data =[go.Pie(labels=labels, values = values)])  # Genererer pie-chart
             graph = dcc.Graph(id = 'pie_plt', figure = fig)
             return graph
 
@@ -127,25 +132,25 @@ def svarinngang_tbl1(dropdown, hm_input):
     print("Svarinngang - tabell")
     if dropdown:
         df = pd.read_sql(f"SELECT * from svarinngang WHERE FELT_ID = '{dropdown.upper()}'", con=engine, parse_dates=['INN_DATO', 'REV_DATO'])
-        df['REV_KODE'] = df['REV_KODE'].fillna('U')
+        df['REV_KODE'] = df['REV_KODE'].fillna('U')  # Setter NaN verdier under REV_KODE som ueditert
         df_alle = klargjor_tbl1_svar(df, dropdown=dropdown, navn='Alle')
         print("Svarinngang - tabell - 1")
         if hm_input:
             try:
                 print("Svarinngang - tabell - 2")
-                df_terskel = df[df['FELT_VERDI']>int(hm_input)]
-                df_viktig = klargjor_tbl1_svar(df_terskel, dropdown=dropdown, navn='Viktig')
+                df_terskel = df[df['FELT_VERDI']>int(hm_input)] #  Filterer ut viktige enheter, dvs større enn grenseverdien
+                df_viktig = klargjor_tbl1_svar(df_terskel, dropdown=dropdown, navn='Viktig') 
 
                 tab3 = pd.concat([df_alle, df_viktig])
-                tab3['Prosent editert'] = tab3['Prosent editert'].astype(float).map("{:.1%}".format)
+                tab3['Prosent editert'] = tab3['Prosent editert'].astype(float).map("{:.1%}".format)  # Prosentvis editerte enheter
                 print("Svarinngang - tabell - 3")
                 if 'U' in tab3:
                     print("Svarinngang - tabell - 3a")
                     tab4 = tab3.append({'Viktighet basert på terskelverdi': "Andel viktige foretak",
-                                        'R': tab3['R'].iloc[1]/tab3['R'].iloc[0],
-                                        'U': tab3['U'].iloc[1]/tab3['U'].iloc[0],
-                                        'Total': tab3['Total'].iloc[1]/tab3['Total'].iloc[0],
-                                       'Prosent editert': 0}, ignore_index = True)
+                                        'R': tab3['R'].iloc[1]/tab3['R'].iloc[0],  # Beregner prosent reviderte viktige enheter
+                                        'U': tab3['U'].iloc[1]/tab3['U'].iloc[0],  # Beregner prosent ureviderte viktige enheter
+                                        'Total': tab3['Total'].iloc[1]/tab3['Total'].iloc[0],  # Andel viktige enheter totalt
+                                       'Prosent editert': 0}, ignore_index = True)  # Beregner prosent totalt
                 else:
                     print("Svarinngang - tabell - 3b")
                     tab4 = tab3.append({'Viktighet basert på terskelverdi': "Andel viktige foretak",
