@@ -240,21 +240,18 @@ def histogram_grid(variabel, bins, checklist, aggregat, clickData):
         df = pd.concat([df, df_e], ignore_index = True)
         df = df.sort_values(by="Log_tid", ascending=False)  
     df = df.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")
-    
-    for i in config["perioder"]:
-        df[config["perioder"][i]["periode"]] = df[config["perioder"][i]["periode"]].astype(float)
-    if checklist != None: # Checklist starter som None
-        if len(checklist) != 0: # Hvis man har krysset av er lengde mer enn 0
-            df = df.loc[df[config["perioder"]["t"]["periode"]] > 0]
+
+    # I tilfelle perioden ligger som feil datatype
+    df[config["perioder"][i]["periode"]] = df[config["perioder"][i]["periode"]].astype(float)
+
     fig = go.Figure()
-    for i in config["perioder"]: # Lager ett trace per årgang
-        fig.add_trace(go.Histogram(
-            x = df[config["perioder"][i]["periode"]],
-            histfunc = "count",
-            histnorm = '',
-            nbinsx = bins,
-            name = config["perioder"][i]["periode"]
-        ))
+    fig.add_trace(go.Histogram(
+        x = df[config["perioder"]["t"]["periode"]],
+        histfunc = "count",
+        histnorm = '',
+        nbinsx = bins,
+        name = config["perioder"]["t"]["periode"]
+    ))
     tittel = f"Fordeling av enheter på {variabel}"
     if aggregater:
         tittel = tittel + f" innenfor {aggregater}"
