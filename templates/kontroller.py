@@ -25,14 +25,14 @@ with open("config.json") as config:
 
 
 try:
-    #Kan ha med "alle" hvis ikke det er en for store fil til at appen henger
+    #Kan ha med "alle" hvis ikke det er en for stor fil til at appen henger
     #feilliste_valg = np.insert(pd.read_csv(config['data']['filsti'] + "/feilliste.csv")['feilliste'].unique(), 0, 'Alle')
     feilliste_valg = pd.read_csv(config['data']['filsti'] + "/feilliste.csv")['feilliste'].unique()
 except:
     feilliste_valg = ["Ingen feillister tilgjengelig"]
 
 feilliste_valg = [item.replace(',', '') for item in feilliste_valg]
-options_grupp = [{'label': x, 'value': x} for x in feilliste_valg]
+options_grupp = [{'label': x, 'value': x} for x in feilliste_valg]  
 
 
 # Input enhet
@@ -41,6 +41,9 @@ options_enhet = [{'label': x, 'value': x} for x in df_opt_foretak["orgnrNavn"]] 
 
 
 nav = Navbar()
+
+# Koden nedenfor er ren Dash-programmerering. Dokumentasjon finnes her:
+# https://dash-bootstrap-components.opensource.faculty.ai/
 
 
 body = dbc.Container([
@@ -54,7 +57,7 @@ body = dbc.Container([
                 multi = True,
                 options = options_grupp,
                 placeholder = "Velg feilliste",
-                value = [feilliste_valg[0]],
+                value = [feilliste_valg[0]],  # Tar første element i feilliste_valg som default verdi
                 #className = "dropdownmeny"
             )
         , width = 5),
