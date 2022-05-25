@@ -92,35 +92,6 @@ def get_callbacks(app):
     # Grid #
     ########
 
-    @app.callback(Output("test", "children"),
-                  Input("treemap", "clickData"))
-    def test(click):
-        print(click)
-        return html.H1(str(click))
-
-    @app.callback(
-        Output('drilldown_grid', 'children'),
-        [
-            Input('grupp', 'value'),
-            Input('data_grid', 'data')
-        ]
-    )
-    def drilldown_grid(aggregater, data):
-        test = [html.H5("Tester")]
-        print(test)
-        df = pd.DataFrame(data)
-        for i in aggregater:
-            test = test + [dcc.Dropdown(
-                    id = i,
-                    multi = True,
-                    options = [{'label': x, 'value': x} for x in list(df[i].unique())],
-                    placeholder = "Velg gruppering"
-                )]
-        print("Her skal dropdown være " + str(test))
-        return html.Div([
-            test
-        ])
-
 
     @app.callback([Output('treemap_div', 'children'),
                   Output('data_grid', 'data')],
@@ -162,7 +133,6 @@ def get_callbacks(app):
                    Input('grupp', 'value'),
                    Input('treemap', 'clickData')])
     def scatterplot_grid_fig(x, y, checklist, aggregat, clickData):
-        print("Scatterplot grid")
         return scatterplot_grid(x, y, checklist, aggregat, clickData)
 
 
@@ -182,7 +152,6 @@ def get_callbacks(app):
                    Input('grupp', 'value'),
                    Input('treemap', 'clickData')])
     def histogram_grid_fig(variabel, bins, checklist, aggregat, clickData):
-        print("Histogram grid")
         return histogram_grid(variabel, bins, checklist, aggregat, clickData)
 
 
@@ -202,7 +171,6 @@ def get_callbacks(app):
                   Input('grupp', 'value'),
                   Input('treemap', 'clickData')])
     def boxplot_grid_fig(variabel, checklist, aggregat, clickData): # Tatt ut av listen: boxpoints, 
-        print("Boxplot grid")
         return boxplot_grid(variabel, checklist, aggregat, clickData) # Tatt ut av listen: boxpoints, 
 
     @app.callback(Output("sammenligning", "children"),

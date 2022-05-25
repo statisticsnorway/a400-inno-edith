@@ -24,8 +24,9 @@ with open("config.json") as config: # Laster in valg fra config.json
 
 
 def treeplot(n_click, var, grupp):
-    print("Lager treeplot - grid")
     if n_click:
+        print("----- Starter treemap grid -----")
+        print()
         if len(var) == 1:
             df = pd.read_sql(f'SELECT * FROM {config["tabeller"]["raadata"]} WHERE VARIABEL in ("{var[0]}")', con=engine)
             try: # Slår sammen editeringer med rådata
@@ -54,6 +55,8 @@ def treeplot(n_click, var, grupp):
         fig = px.treemap(df, path = grupp , values = config["perioder"]["t"]["periode"])
         graph = dcc.Graph(id = 'treemap', figure = fig)
         data = df.to_dict('rows')
+        print("----- Avslutter treemap grid -----")
+        print()
         return graph, data
     else:
         return no_update
@@ -61,9 +64,10 @@ def treeplot(n_click, var, grupp):
 
 # Dette er ikke en callback, men brukes i callbacks som styres av clickdata fra treemap
 def treemap_clickdata_sjekk(grupp, clickData):
-    print(" Clickdata ")
-    print("")
-    print("clickdata er: " + str(clickData))
+    print("treemap_clickdata_sjekk starter")
+    print("Clickdata er:")
+    print()
+    print(str(clickData))
     print()
     nivå = None
     aggregater = None
@@ -85,10 +89,14 @@ def treemap_clickdata_sjekk(grupp, clickData):
     print()
     print("Aggregater er: " + str(aggregater))
     print()
+    print("treemap_clickdata_sjekk ferdig")
+    print()
     return nivå, aggregater
 
 
 def table_grid(data, grupp, clickData):
+    print("----- Starter tabell grid -----")
+    print()
     df = pd.DataFrame(data)
     """ Forbereder lister over kolonner som skal være med videre, etter hvorvidt de er string/objekter eller numeriske kolonner """
     perioder = {}
@@ -133,11 +141,15 @@ def table_grid(data, grupp, clickData):
     """ Gjør data fra dataframe klart til dash table """
     data = df.to_dict("rows")
     columns = [{'name': i, 'id': i} for i in df.columns]
+    print("----- Avslutter tabell grid -----")
+    print()
     return table(id = "tabell_grid", data = data, columns = columns)
 
 
 
 def scatterplot_grid(x, y, checklist, aggregat, clickData):
+    print("----- Starter scatterplot grid -----")
+    print()
     tilpasning_til_spørring = ""
     variabel_filter = f"WHERE VARIABEL in {tuple([x]+[y])} "
     tilpasning_til_spørring = tilpasning_til_spørring + variabel_filter
@@ -146,12 +158,9 @@ def scatterplot_grid(x, y, checklist, aggregat, clickData):
     nivå, aggregater = treemap_clickdata_sjekk(aggregat, clickData)
 
     # Bruker klikkdata for å lage SQL spørring
-    print("")
-    print("Nivå er: " + str(nivå))
-    print("")
-    if nivå != "topp" or None:
+    if aggregater is not None:
         aggregering_filter = "" # Skal bruke denne for å lage en SQL spørring som en string for å filtrere datasettet
-        for i in range(len(clickData["points"][0]["id"].split("/"))): # Splitter clickdata sin id basert på / 
+        for i in range(len(aggregater)): # Splitter clickdata sin id basert på / 
             aggregering_filter = aggregering_filter \
             + "AND " \
             + str(aggregat[i]) \
@@ -159,6 +168,9 @@ def scatterplot_grid(x, y, checklist, aggregat, clickData):
             + str(clickData["points"][0]["id"].split("/")[i]) \
             + "' " # \ på slutten er bare for å markere linjeskifte, gjør koden som lager stringen bittelitt mer leselig
         tilpasning_til_spørring = tilpasning_til_spørring + aggregering_filter
+    print("Tilpasning til spørring:")
+    print(tilpasning_til_spørring)
+    print()
     spørring = f"SELECT * FROM {config['tabeller']['raadata']} " + tilpasning_til_spørring
 
     df = pd.read_sql(spørring, con = engine)
@@ -171,7 +183,6 @@ def scatterplot_grid(x, y, checklist, aggregat, clickData):
         print("Ingen endringer er loggført")
     if editeringer != False:
         df = pd.concat([df, df_e], ignore_index = True)
-        print(df)
         df = df.sort_values(by="Log_tid", ascending=False)
     df = df.loc[(df["VARIABEL"].isin([x, y]))].drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")    
     df = df.pivot(index = "orgnrNavn", columns=["VARIABEL"], values = config["perioder"]["t"]["periode"])
@@ -182,31 +193,41 @@ def scatterplot_grid(x, y, checklist, aggregat, clickData):
             df = df.loc[df[y] > 0]
     fig = px.scatter(df,x = x,y = y, hover_name = df.index, trendline="ols")
     tittel = f"Forholdet mellom {x} og {y}"
-    if nivå != "topp" or None:
+    if aggregater:
         tittel = tittel + f" blant {aggregater}"
     fig.update_layout(
         title = tittel
     )
+    print("----- Avslutter scatterplot grid -----")
+    print()
     return dcc.Graph(id = "scatter_grid",figure=fig)
 
 
 
 def histogram_grid(variabel, bins, checklist, aggregat, clickData):
+    print("----- Starter histogram grid -----")
+    print()
     tilpasning_til_spørring = ""
     variabel_filter = f"WHERE VARIABEL = '{variabel}' "
     tilpasning_til_spørring = tilpasning_til_spørring + variabel_filter
 
-    if clickData != None:
-        if "id" in clickData["points"][0]:
-            aggregering_filter = "" # Skal bruke denne for å lage en SQL spørring som en string for å filtrere datasettet
-            for i in range(len(clickData["points"][0]["id"].split("/"))): # Splitter clickdata sin id basert på / 
-                aggregering_filter = aggregering_filter \
-                + "AND " \
-                + str(aggregat[i]) \
-                + " = '" \
-                + str(clickData["points"][0]["id"].split("/")[i]) \
-                + "' " # \ på slutten er bare for å markere linjeskifte, gjør koden som lager stringen bittelitt mer leselig
-            tilpasning_til_spørring = tilpasning_til_spørring + aggregering_filter
+# Finner ut hvilket nivå clickdata fra treemap peker til 
+    nivå, aggregater = treemap_clickdata_sjekk(aggregat, clickData)
+
+    # Bruker klikkdata for å lage SQL spørring
+    if aggregater is not None:
+        aggregering_filter = "" # Skal bruke denne for å lage en SQL spørring som en string for å filtrere datasettet
+        for i in range(len(aggregater)): # Splitter clickdata sin id basert på / 
+            aggregering_filter = aggregering_filter \
+            + "AND " \
+            + str(aggregat[i]) \
+            + " = '" \
+            + str(clickData["points"][0]["id"].split("/")[i]) \
+            + "' " # \ på slutten er bare for å markere linjeskifte, gjør koden som lager stringen bittelitt mer leselig
+        tilpasning_til_spørring = tilpasning_til_spørring + aggregering_filter
+    print("Tilpasning til spørring:")
+    print(tilpasning_til_spørring)
+    print()
     spørring = f"SELECT * FROM {config['tabeller']['raadata']} " + tilpasning_til_spørring
     df = pd.read_sql(spørring, con = engine)
     spørring_e = f"SELECT * FROM {config['tabeller']['editeringer']} " + tilpasning_til_spørring
@@ -215,10 +236,8 @@ def histogram_grid(variabel, bins, checklist, aggregat, clickData):
         editeringer = True
     except:
         editeringer = False
-        print("Ingen endringer er loggført")
     if editeringer != False:
         df = pd.concat([df, df_e], ignore_index = True)
-        print(df)
         df = df.sort_values(by="Log_tid", ascending=False)  
     df = df.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")
     
@@ -236,32 +255,45 @@ def histogram_grid(variabel, bins, checklist, aggregat, clickData):
             nbinsx = bins,
             name = config["perioder"][i]["periode"]
         ))
+    tittel = f"Fordeling av enheter på {variabel}"
+    if aggregater:
+        tittel = tittel + f" innenfor {aggregater}"
     fig.update_layout(
+        title = tittel,
         xaxis_title = f"Verdi på {variabel}",
         yaxis_title = "Antall enheter med verdien",
         barmode = "group"
     )
+    print("----- Avslutter histogram grid -----")
+    print()
     return dcc.Graph(id = "histogram_grid", figure = fig)
 
 
 
 def boxplot_grid(variabel, checklist, aggregat, clickData): # Tatt ut av listen: boxpoints, 
-    print("Laster data til boxplot grid")
+    print("----- Starter boxplot grid -----")
+    print()
     tilpasning_til_spørring = ""
     variabel_filter = f"WHERE VARIABEL = '{variabel}' "
     tilpasning_til_spørring = tilpasning_til_spørring + variabel_filter
 
-    if clickData != None:
-        if "id" in clickData["points"][0]:
-            aggregering_filter = "" # Skal bruke denne for å lage en SQL spørring som en string for å filtrere datasettet
-            for i in range(len(clickData["points"][0]["id"].split("/"))): # Splitter clickdata sin id basert på / 
-                aggregering_filter = aggregering_filter \
-                + "AND " \
-                + str(aggregat[i]) \
-                + " = '" \
-                + str(clickData["points"][0]["id"].split("/")[i]) \
-                + "' " # \ på slutten er bare for å markere linjeskifte, gjør koden som lager stringen bittelitt mer leselig
-            tilpasning_til_spørring = tilpasning_til_spørring + aggregering_filter
+    # Finner ut hvilket nivå clickdata fra treemap peker til 
+    nivå, aggregater = treemap_clickdata_sjekk(aggregat, clickData)
+
+    # Bruker klikkdata for å lage SQL spørring
+    if aggregater is not None:
+        aggregering_filter = "" # Skal bruke denne for å lage en SQL spørring som en string for å filtrere datasettet
+        for i in range(len(aggregater)): # Splitter clickdata sin id basert på / 
+            aggregering_filter = aggregering_filter \
+            + "AND " \
+            + str(aggregat[i]) \
+            + " = '" \
+            + str(clickData["points"][0]["id"].split("/")[i]) \
+            + "' " # \ på slutten er bare for å markere linjeskifte, gjør koden som lager stringen bittelitt mer leselig
+        tilpasning_til_spørring = tilpasning_til_spørring + aggregering_filter
+    print("Tilpasning til spørring:")
+    print(tilpasning_til_spørring)
+    print()
     spørring = f"SELECT * FROM {config['tabeller']['raadata']} " + tilpasning_til_spørring
     df = pd.read_sql(spørring, con = engine)
     spørring_e = f"SELECT * FROM {config['tabeller']['editeringer']} " + tilpasning_til_spørring
@@ -270,10 +302,8 @@ def boxplot_grid(variabel, checklist, aggregat, clickData): # Tatt ut av listen:
         editeringer = True
     except:
         editeringer = False
-        print("Ingen endringer er loggført")
     if editeringer != False:
         df = pd.concat([df, df_e], ignore_index = True)
-        print(df)
         df = df.sort_values(by="Log_tid", ascending=False)
     df = df.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")
     for i in config["perioder"]:
@@ -289,15 +319,23 @@ def boxplot_grid(variabel, checklist, aggregat, clickData): # Tatt ut av listen:
             name=str(config["perioder"][i]["periode"]),
             text = df['orgnrNavn']
         ))
+    fig.update_traces(boxpoints = "all")
+    tittel = f"Boxplot for verdier i {variabel}"
+    if aggregater:
+        tittel = tittel + f" innenfor {aggregater}"
     fig.update_layout(
+        title = tittel,
         xaxis_title = "Periode",
         yaxis_title = variabel
     )
+    print("----- Avslutter boxplot grid -----")
+    print()
     return dcc.Graph(id = "boxplot_grid", figure = fig)
 
 
 def sammenlign_editert_ueditert(timestamp):
-    print("Sammenligne")
+    print("----- Starter sammenligning av rådata og editerte grid -----")
+    print()
     aggregat = "ORG_FORM"
     variabel = "INTFOU"
     df_editert = pd.read_sql(f'SELECT * FROM {config["tabeller"]["editeringer"]}', con=engine)
@@ -331,7 +369,8 @@ def sammenlign_editert_ueditert(timestamp):
         go.Scatter(x = df_re[aggregat], y = df_re["diff"])
     )
     fig2.update_layout(title = "Editerte vs rådata sammenligning etter aggregat, prosentvis")
-    print("Sammenligne - ferdig")
+    print("----- Avslutter sammenligning av rådata og editerte grid -----")
+    print()
     return [dcc.Graph(figure=fig), dcc.Graph(figure=fig2)]
 
 

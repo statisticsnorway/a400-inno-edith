@@ -37,11 +37,6 @@ options_grupp = [{'label': x, 'value': x} for x in config["aggregater"]]
 body = html.Div([dbc.Container([
     dcc.Store('data_grid'),
     dbc.Row([
-        dbc.Col(
-            html.Div(id = 'test'), width=12
-        )
-    ]),
-    dbc.Row([
         dbc.Col([
             html.Span("Velg aggregering", id = "aggregat_tekst_grid", style={"textDecoration": "underline", "cursor": "pointer"}),
             dbc.Tooltip('Her velger du hvilke aggregater dataene skal grupperes etter. Du kan velge flere alternativer, og de grupperes i rekkefølgen du velger. Alternativene dine her er basert på det som står i config under "aggregater"', target = "aggregat_tekst_grid"),
@@ -72,7 +67,6 @@ body = html.Div([dbc.Container([
             )
         )
     ], style = {"padding":"10px"}),
-    dbc.Row([dbc.Col(html.Div(id = 'test'), width=10)]),
     dbc.Row([
         dbc.Col(
             html.Div(
