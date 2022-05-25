@@ -51,8 +51,8 @@ def treeplot(n_click, var, grupp):
                 df = pd.concat([df, df_e], ignore_index = True)
                 df = df.sort_values(by="Log_tid", ascending=False)
                 df = df.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")
-        df = df.fillna("MANGLER") # Fjern dette
-        fig = px.treemap(df, path = grupp , values = config["perioder"]["t"]["periode"])
+
+        fig = px.treemap(df.fillna("MANGLER"), path = grupp , values = config["perioder"]["t"]["periode"])
         graph = dcc.Graph(id = 'treemap', figure = fig)
         data = df.to_dict('rows')
         print("----- Avslutter treemap grid -----")
@@ -242,7 +242,7 @@ def histogram_grid(variabel, bins, checklist, aggregat, clickData):
     df = df.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")
 
     # I tilfelle perioden ligger som feil datatype
-    df[config["perioder"][i]["periode"]] = df[config["perioder"][i]["periode"]].astype(float)
+    df[config["perioder"]["t"]["periode"]] = df[config["perioder"]["t"]["periode"]].astype(float)
 
     fig = go.Figure()
     fig.add_trace(go.Histogram(
