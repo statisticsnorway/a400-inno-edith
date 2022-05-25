@@ -37,12 +37,9 @@ options_grupp = [{'label': x, 'value': x} for x in config["aggregater"]]
 body = html.Div([dbc.Container([
     dcc.Store('data_grid'),
     dbc.Row([
-        dbc.Col(
-            html.Div(id = 'test'), width=12
-        )
-    ]),
-    dbc.Row([
-        dbc.Col(
+        dbc.Col([
+            html.Span("Velg aggregering", id = "aggregat_tekst_grid", style={"textDecoration": "underline", "cursor": "pointer"}),
+            dbc.Tooltip('Her velger du hvilke aggregater dataene skal grupperes etter. Du kan velge flere alternativer, og de grupperes i rekkefølgen du velger. Alternativene dine her er basert på det som står i config under "aggregater"', target = "aggregat_tekst_grid"),
             dcc.Dropdown(
                 id = 'grupp',
                 multi = True,
@@ -50,8 +47,10 @@ body = html.Div([dbc.Container([
                 value = [config["default-valg"]["grid"]["gruppering"]],
                 placeholder = "Velg gruppering"
             )
-        , width = 3),
-        dbc.Col(
+        ], width = 3),
+        dbc.Col([
+            html.Span("Velg variabel/variabler", id = "variabel_tekst_grid", style={"textDecoration": "underline", "cursor": "pointer"}),
+            dbc.Tooltip('Her velger du hvilke variabler som skal inkluderes. Du kan velge flere variabler, men kun den første variabelen vises i treemap figuren.', target = "variabel_tekst_grid"),
             dcc.Dropdown(
                 id = 'var',
                 multi = True,
@@ -59,7 +58,7 @@ body = html.Div([dbc.Container([
                 value = [config["default-valg"]["grid"]["variabel"]],
                 placeholder = "Velg variabler"
             )
-        , width = 3),
+        ], width = 3),
         dbc.Col(
             dbc.ButtonGroup(
                 [
@@ -68,7 +67,6 @@ body = html.Div([dbc.Container([
             )
         )
     ], style = {"padding":"10px"}),
-    dbc.Row([dbc.Col(html.Div(id = 'test'), width=10)]),
     dbc.Row([
         dbc.Col(
             html.Div(
@@ -76,22 +74,24 @@ body = html.Div([dbc.Container([
                     dbc.Tab([
                         dbc.Row(html.Div(id = "scatterplot_div_grid")),
                         dbc.Row([
-                            dbc.Col(
+                            dbc.Col([
+                                "X-variabel",
                                 dcc.Dropdown(
                                     id = 'x_scatter_grid',
                                     options = options_var,
                                     placeholder = "Velg x variabel",
                                     className="egendropdown"
                                 )
-                            ),
-                            dbc.Col(
+                            ]),
+                            dbc.Col([
+                                "Y-variabel",
                                 dcc.Dropdown(
                                     id = 'y_scatter_grid',
                                     options = options_var,
                                     placeholder = "Velg y variabel",
                                     className="egendropdown"
                                 )
-                            ),
+                            ]),
                             dbc.Col(
                                 dcc.Checklist(
                                     id = "checklist_scatter_grid",
@@ -105,22 +105,24 @@ body = html.Div([dbc.Container([
                     dbc.Tab([
                         dbc.Row(html.Div(id = "histogram_div_grid")),
                         dbc.Row([
-                            dbc.Col(
+                            dbc.Col([
+                                "Variabel til histogram",
                                 dcc.Dropdown(
                                     id = "variabel_histogram_grid",
                                     options = options_var,
                                     placeholder = "Velg variabel",
                                     className = "egendropdown"
                                 )
-                            ),
-                            dbc.Col(
+                            ]),
+                            dbc.Col([
+                                "Velg antall bins til histogrammet",
                                 dcc.Input(
                                     id="bins_histogram_grid",
                                     type="number",
-                                    placeholder="Sett inn grenseverdi",
+                                    placeholder="Velg antall bins",
                                     value = 10
                                 )
-                            ),
+                            ]),
                             dbc.Col(
                                 dcc.Checklist(
                                     id = "checklist_histogram_grid",
@@ -135,26 +137,27 @@ body = html.Div([dbc.Container([
                     dbc.Tab([
                         dbc.Row([html.Div(id = "boxplot_div_grid")]),
                         dbc.Row([
-                            dbc.Col(
+                            dbc.Col([
+                                "Variabel til boxplot",
                                 dcc.Dropdown(
                                     id = "variabel_boxplot_grid",
                                     options = options_var,
                                     placeholder = "Velg variabel",
                                     className = "egendropdown"
                                 )
-                            ),
-                            dbc.Col(
-                                dcc.Dropdown(
-                                    id = "boxpoints_boxplot_grid",
-                                    options = [
-                                        {"label": "Alle", "value": "all"},
-                                        {"label": "utliggere", "value": "outliers"},
-                                        {"label": "Suspected outliers", "value": "suspectedoutliers"}
-                                    ],
-                                    value = "all",
-                                    className = "egendropdown"
-                                )
-                            ),
+                            ]),
+#                            dbc.Col( # Dropdown for outliers, foreløpig fungerer den ikke så den kommenteres ut
+#                                dcc.Dropdown(
+#                                    id = "boxpoints_boxplot_grid",
+#                                    options = [
+#                                        {"label": "Alle", "value": "all"},
+#                                        {"label": "utliggere", "value": "outliers"},
+#                                        {"label": "Suspected outliers", "value": "suspectedoutliers"}
+#                                    ],
+#                                    value = "all",
+#                                    className = "egendropdown"
+#                                )
+#                            ),
                             dbc.Col(
                                 dcc.Checklist(
                                     id = "checklist_boxplot_grid",
