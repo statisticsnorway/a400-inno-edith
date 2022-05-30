@@ -18,6 +18,8 @@ from flask import request # for brukernavn
 import plotly.express as px
 
 import getpass
+import dash_table as dt
+import dash_html_components as html
 
 
 with open("config.json") as config:
