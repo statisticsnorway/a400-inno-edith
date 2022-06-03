@@ -18,6 +18,8 @@ from flask import request # for brukernavn
 import plotly.express as px
 
 import getpass
+import dash_table as dt
+import dash_html_components as html
 
 
 with open("config.json") as config:
@@ -231,16 +233,14 @@ def enhet_plot_bar_agg(data, kol_ed, var, grupp, orgnrnavn, n_clicks):
         grupp_var = pd.read_sql(f"SELECT {grupp} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and VARIABEL = '{var[0]}'", con=engine).loc[0,grupp]
         spørring = f"SELECT VARIABEL, "
         for i in config["perioder"]:
-            spørring += f"SUM({config['perioder'][i]['periode']}), "
-            spørring += f"{config['perioder'][i]['periode']}, "
+            spørring += f"SUM({config['perioder'][i]['periode']}) AS {config['perioder'][i]['periode']}, "
         spørring += f"{grupp} FROM {config['tabeller']['raadata']} WHERE {grupp} = '{grupp_var}' and VARIABEL = '{var[0]}' and OrgnrNavn NOT IN ('{orgnrnavn}') GROUP BY VARIABEL"
         df_grupp = pd.read_sql(spørring, con = engine)
     else: # Hvis var er mer enn ett element må det skrives som en tuple i SQL spørringen
         grupp_var = pd.read_sql(f"SELECT {grupp} FROM {config['tabeller']['raadata']} WHERE OrgNrNavn = '{orgnrnavn}' and VARIABEL IN {tuple(var)}", con=engine).loc[0,grupp]
         spørring = f"SELECT VARIABEL, "
         for i in config["perioder"]:
-            spørring += f"SUM({config['perioder'][i]['periode']}), "
-            spørring += f"{config['perioder'][i]['periode']}, "
+            spørring += f"SUM({config['perioder'][i]['periode']}) AS {config['perioder'][i]['periode']}, "
         spørring += f"{grupp} FROM {config['tabeller']['raadata']} WHERE {grupp} = '{grupp_var}' and VARIABEL IN {tuple(var)} and OrgnrNavn NOT IN ('{orgnrnavn}') GROUP BY VARIABEL"
         df_grupp = pd.read_sql(spørring, con = engine)
     df = pd.DataFrame().from_dict(data)
@@ -275,8 +275,12 @@ def enhet_plot_bar_agg(data, kol_ed, var, grupp, orgnrnavn, n_clicks):
 def offcanvas_innhold(foretak):
     if foretak:
         print("Henter metadata og kommentarer til sidebar")
-        metadata = tuple(config_variabler["metadatavariabler"])
+        if len(config_variabler["metadatavariabler"]) > 1:
+            metadata = tuple(config_variabler["metadatavariabler"])
+        else:
+            metadata = "('" + config_variabler["metadatavariabler"][0] + "')"
         print(metadata)
+        
         df = pd.read_sql(f'SELECT Variabel, {config["perioder"]["t"]["periode"]}  AS VERDI FROM {config["tabeller"]["raadata"]} WHERE ORGNR = {str(foretak)[:9]} AND Variabel IN {metadata}', con=engine).drop_duplicates()
         print(df)
         data = df.to_dict("rows")

@@ -2,3 +2,4 @@
 * text eol=lf
 *.ipynb filter=nbstripout
 *.ipynb diff=ipynb
+* text eol=lf

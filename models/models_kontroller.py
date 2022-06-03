@@ -385,7 +385,10 @@ def oppdater_database(df): # Funksjon for å lagre editering og loggføre bruker
 def kontroll_offcanvas_innhold(enhet_rad, tabelldata):
     if enhet_rad:
         print("Henter metadata og kommentarer til sidebar")
-        metadata = tuple(config_variabler["metadatavariabler"])
+        if len(config_variabler["metadatavariabler"]) > 1:
+            metadata = tuple(config_variabler["metadatavariabler"])
+        else:
+            metadata = "('" + config_variabler["metadatavariabler"][0] + "')"
         print(metadata)
 
         # Henter ut orgnr basert på valgt rad (celle som er klikket på)
