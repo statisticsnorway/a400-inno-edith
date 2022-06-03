@@ -275,8 +275,12 @@ def enhet_plot_bar_agg(data, kol_ed, var, grupp, orgnrnavn, n_clicks):
 def offcanvas_innhold(foretak):
     if foretak:
         print("Henter metadata og kommentarer til sidebar")
-        metadata = tuple(config_variabler["metadatavariabler"])
+        if len(config_variabler["metadatavariabler"]) > 1:
+            metadata = tuple(config_variabler["metadatavariabler"])
+        else:
+            metadata = "('" + config_variabler["metadatavariabler"][0] + "')"
         print(metadata)
+        
         df = pd.read_sql(f'SELECT Variabel, {config["perioder"]["t"]["periode"]}  AS VERDI FROM {config["tabeller"]["raadata"]} WHERE ORGNR = {str(foretak)[:9]} AND Variabel IN {metadata}', con=engine).drop_duplicates()
         print(df)
         data = df.to_dict("rows")
