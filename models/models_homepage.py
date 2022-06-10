@@ -67,8 +67,20 @@ def svarinngang_linje(dropdown, input_svarinngang):
             # OBS! Det nedenfor er kun som et eksempel på hvordan man kan inkludere markering for svarfrist o.l. i figuren
             """ Enten kan man lage en dictionary med datoer man ønsker markert, eller koble det til en dataframe """
             timestamps = {
+                "Frittstående varsel": {
+                    "dato": ["2022-06-16 04:00:00.000000", "2022-06-16 04:00:00.000000"]
+                },
                 "Svarfrist": {
-                    "dato": [df["INN_DATO"].mean(), df["INN_DATO"].mean()]
+                    "dato": ["2022-08-03 04:00:00.000000", "2022-08-03 04:00:00.000000"]
+                },
+                "Påminnelse": {
+                    "dato": ["2022-08-10 04:00:00.000000", "2022-08-10 04:00:00.000000"]
+                },
+                "Tvangsmulkt utsending": {
+                    "dato": ["2022-08-17 04:00:00.000000", "2022-08-17 04:00:00.000000"]
+                },
+                "Tvangsmulkt svarfrist": {
+                    "dato": ["2022-08-31 04:00:00.000000", "2022-08-31 04:00:00.000000"]
                 }
             }
             for i in timestamps:
