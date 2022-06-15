@@ -147,9 +147,14 @@ def table_grid(data, grupp, clickData):
 
 
 
-def scatterplot_grid(x, y, checklist, aggregat, clickData):
+def scatterplot_grid(x, y, checklist, aggregat, clickData, scatter_aggregat, trendline):
     print("----- Starter scatterplot grid -----")
     print()
+    if trendline:
+        if "ols" in trendline:
+            trendline = "ols"
+    else:
+        trendline = None
     tilpasning_til_spørring = ""
     variabel_filter = f"WHERE VARIABEL in {tuple([x]+[y])} "
     tilpasning_til_spørring = tilpasning_til_spørring + variabel_filter
@@ -184,14 +189,21 @@ def scatterplot_grid(x, y, checklist, aggregat, clickData):
     if editeringer != False:
         df = pd.concat([df, df_e], ignore_index = True)
         df = df.sort_values(by="Log_tid", ascending=False)
-    df = df.loc[(df["VARIABEL"].isin([x, y]))].drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")    
-    df = df.pivot(index = "orgnrNavn", columns=["VARIABEL"], values = config["perioder"]["t"]["periode"])
-    df = df[[x, y]].astype(float)
+    df = df.loc[(df["VARIABEL"].isin([x, y]))].drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")
+    print(f"Scatter aggregat er: {scatter_aggregat}")
+    if scatter_aggregat:
+        df = df.pivot(index = ["orgnrNavn", scatter_aggregat], columns=["VARIABEL"], values = config["perioder"]["t"]["periode"]).reset_index()
+    else:
+        df = df.pivot(index = "orgnrNavn", columns=["VARIABEL"], values = config["perioder"]["t"]["periode"]).reset_index()
+    df[[x, y]] = df[[x, y]].astype(float)
     if checklist != None: # Checklist starter som None
         if len(checklist) != 0: # Hvis man har krysset av er lengde mer enn 0
             df = df.loc[df[x] > 0]
             df = df.loc[df[y] > 0]
-    fig = px.scatter(df,x = x,y = y, hover_name = df.index, trendline="ols")
+    if scatter_aggregat:
+        fig = px.scatter(df,x = x,y = y, hover_name = df["orgnrNavn"], trendline=trendline, color = scatter_aggregat)
+    else:
+        fig = px.scatter(df,x = x,y = y, hover_name = df["orgnrNavn"], trendline=trendline)
     tittel = f"Forholdet mellom {x} og {y}"
     if aggregater:
         tittel = tittel + f" blant {aggregater}"
