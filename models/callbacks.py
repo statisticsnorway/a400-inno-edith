@@ -11,7 +11,7 @@ from models.models_homepage import svarinngang_linje, svarinngang_kake, svarinng
 from models.models_grid import treeplot, table_grid, scatterplot_grid, histogram_grid, boxplot_grid, sammenlign_editert_ueditert
 from models.models_enhet import enhetstabell1, enhet_plot, enhetstabell_store, update_columns, enhet_plot_bar_agg, offcanvas_innhold
 from models.models_logg import logg_tabell
-from models.models_kontroller import feilliste_tabell, innhent_feilliste, oppdater_feilliste_db, model_feilliste_figur, kontroll_enhetstabell_store, kontroll_update_columns, kontroll_enhetstabell, kontroll_offcanvas_innhold
+from models.models_kontroller import feilliste_tabell, innhent_feilliste, oppdater_feilliste_db, model_feilliste_figur, kontroll_enhetstabell_store, kontroll_update_columns, kontroll_enhetstabell, kontroll_offcanvas_innhold, feilliste_figur_test
 
 from templates.homepage import Svarinngang
 from templates.navbar import Navbar
@@ -298,6 +298,17 @@ def get_callbacks(app):
     def show_feilliste_figur(enhet_rad, tabelldata, feilliste):
         return model_feilliste_figur(enhet_rad, tabelldata, feilliste)
 
+
+    @app.callback(
+        Output("eksperiment", "children"),
+        [
+            Input("velg_feilliste", "value"),
+            Input("feilliste_tabell_endret", "active_cell"),
+            Input('feilliste_tabell_endret', 'derived_virtual_data')
+        ]
+    )
+    def eksperiment(feilliste, active_cell, tabelldata):
+        return feilliste_figur_test(feilliste, active_cell, tabelldata)
 
     #Tabell for enhet på kontroll-side
     @app.callback(Output('kontroll_tabell_enhet', 'data'),

@@ -186,6 +186,32 @@ def model_feilliste_figur(enhet_rad, tabelldata,feilliste):
         fig_feilliste_var = dcc.Graph(id = 'xxx', figure = fig1)
         return fig_feilliste_var
 
+# Test #
+
+def feilliste_figur_test(feilliste, enhet_rad, tabelldata):
+    valgt_rad          = tabelldata[enhet_rad["row"]]
+    enhet_klikket      = valgt_rad["ORGNR"]
+    enhet_klikket_navn = valgt_rad["NAVN"]
+    enhet_klikket_orgnrnavn = enhet_klikket + ": " + enhet_klikket_navn
+    feilliste = "feilliste_figur_test"
+    spørring = f"SELECT * FROM raadata "
+    #if feilliste == "Forbruk av el er lavt":
+    spørring = spørring + "WHERE VARIABEL in ('ELFORBRUK', 'ELUTGIFTER')"
+    df = pd.read_sql(spørring, con = engine)
+
+    df = df.loc[df["VARIABEL"].isin([f'ELFORBRUK', f'ELUTGIFTER'])]
+    df = df.pivot(index='ORGNR', columns='VARIABEL', values='År_2021').reset_index()
+    df = df.dropna(subset = [f'ELFORBRUK', f'ELUTGIFTER'])
+    df[f"ELFORBRUK"] = df[f"ELFORBRUK"].astype(int)
+    df[f"ELUTGIFTER"] = df[f"ELUTGIFTER"].astype(int)
+
+    df.loc[df["ORGNR"] == enhet_klikket, "valgt"] = enhet_klikket
+    df.loc[df["ORGNR"] != enhet_klikket, "valgt"] = "Andre"
+    fig = px.scatter(df, x = "ELFORBRUK", y = "ELUTGIFTER", color = "valgt")
+    return dcc.Graph(figure = fig)
+
+# Test #
+
 
 def oppdater_feilliste_db(data):
     t = str(config["perioder"]["t"]["delreg"])

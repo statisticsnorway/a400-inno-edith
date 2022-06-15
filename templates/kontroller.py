@@ -71,6 +71,8 @@ body = dbc.Container([
 
     dbc.Row([dbc.Col(html.Div(id = 'figur_feilliste_vars'), width=12)]),
 
+    dbc.Row([dbc.Col(html.Div(id = "eksperiment"))]),
+
     dcc.Store(id = 'kontroll_tabell_enhet'),
 
     dbc.Row([dbc.Col(dbc.ButtonGroup([
