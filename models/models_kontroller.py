@@ -11,6 +11,8 @@ from dash.exceptions import PreventUpdate
 import dash_html_components as html
 
 import plotly.express as px
+import plotly.graph_objects as go
+
 
 import dash_table as dt
 
@@ -189,26 +191,56 @@ def model_feilliste_figur(enhet_rad, tabelldata,feilliste):
 # Test #
 
 def feilliste_figur_test(feilliste, enhet_rad, tabelldata):
+    print("Eksperiment")
+    print()
+    print("Eksperiment1: " + str(feilliste))
+    print()
+    print("Eksperiment2: " + str(enhet_rad))
+    print()
     valgt_rad          = tabelldata[enhet_rad["row"]]
     enhet_klikket      = valgt_rad["ORGNR"]
     enhet_klikket_navn = valgt_rad["NAVN"]
+    FELT_ID            = valgt_rad["FELT_ID"]
+    aktuell_feilliste          = valgt_rad["feilliste"] 
     enhet_klikket_orgnrnavn = enhet_klikket + ": " + enhet_klikket_navn
-    feilliste = "feilliste_figur_test"
     spørring = f"SELECT * FROM raadata "
-    #if feilliste == "Forbruk av el er lavt":
-    spørring = spørring + "WHERE VARIABEL in ('ELFORBRUK', 'ELUTGIFTER')"
-    df = pd.read_sql(spørring, con = engine)
+    print("Eksperiment3: " + str(aktuell_feilliste))
 
-    df = df.loc[df["VARIABEL"].isin([f'ELFORBRUK', f'ELUTGIFTER'])]
-    df = df.pivot(index='ORGNR', columns='VARIABEL', values='År_2021').reset_index()
-    df = df.dropna(subset = [f'ELFORBRUK', f'ELUTGIFTER'])
-    df[f"ELFORBRUK"] = df[f"ELFORBRUK"].astype(int)
-    df[f"ELUTGIFTER"] = df[f"ELUTGIFTER"].astype(int)
+    innhold = []
 
-    df.loc[df["ORGNR"] == enhet_klikket, "valgt"] = enhet_klikket
-    df.loc[df["ORGNR"] != enhet_klikket, "valgt"] = "Andre"
-    fig = px.scatter(df, x = "ELFORBRUK", y = "ELUTGIFTER", color = "valgt")
-    return dcc.Graph(figure = fig)
+    if aktuell_feilliste in ["Urealistisk pris", " Urealistisk pris"]:
+        spørring = spørring + f"WHERE VARIABEL in ('{FELT_ID}')"
+        df = pd.read_sql(spørring, con = engine)
+        df["År_2021"] = df["År_2021"].astype(int)
+        df = df.loc[df["År_2021"] > 1]
+        fig = go.Figure()
+
+        dff = df.loc[df["ORGNR"] != enhet_klikket]
+        dff = dff.groupby("Driftsform").mean().reset_index()
+        fig.add_trace(go.Bar(x = dff["Driftsform"], y = dff["År_2021"], name = "Snitt", text = dff["År_2021"].round()))
+
+        dff = df.loc[df["ORGNR"] == enhet_klikket]
+        dff = dff.groupby("Driftsform").mean().reset_index()
+        fig.add_trace(go.Bar(x = dff["Driftsform"], y = dff["År_2021"], name = enhet_klikket, text = dff["År_2021"].round()))
+
+        innhold = innhold + [dcc.Graph(figure = fig)]
+
+    if aktuell_feilliste in ["Forbruk av el er lavt"]:
+        spørring = spørring + "WHERE VARIABEL in ('ELFORBRUK', 'ELUTGIFTER')"
+        df = pd.read_sql(spørring, con = engine)
+
+        df = df.loc[df["VARIABEL"].isin([f'ELFORBRUK', f'ELUTGIFTER'])]
+        df = df.pivot(index='ORGNR', columns='VARIABEL', values='År_2021').reset_index()
+        df = df.dropna(subset = [f'ELFORBRUK', f'ELUTGIFTER'])
+        df[f"ELFORBRUK"] = df[f"ELFORBRUK"].astype(int)
+        df[f"ELUTGIFTER"] = df[f"ELUTGIFTER"].astype(int)
+
+        df.loc[df["ORGNR"] == enhet_klikket, "valgt"] = enhet_klikket
+        df.loc[df["ORGNR"] != enhet_klikket, "valgt"] = "Andre"
+        fig = px.scatter(df, x = "ELFORBRUK", y = "ELUTGIFTER", color = "valgt")
+        innhold = innhold + [dcc.Graph(figure = fig)]
+
+    return innhold
 
 # Test #
 
@@ -217,7 +249,7 @@ def oppdater_feilliste_db(data):
     t = str(config["perioder"]["t"]["delreg"])
     print("Oppdaterer feilliste-fil i db - " + 'Tabell: feilliste_kommentar' + t)
     df = pd.DataFrame().from_dict(data)
-    print(df.head())
+    print(df.head(1))
     if 'feilliste' in df: #Bare for å teste om det ikke er en tom df
         feillister_kommentar = df[['kommentar','feilliste','ORGNR']].astype(str)
          #For å unngå at radene forsvinner etter at man subsetter på feilliste blir radene "appended" og dubletter fjernes etterpå
@@ -260,7 +292,7 @@ def kontroll_enhetstabell_store(enhet_rad, tabelldata): # Sett inn dette , varia
         df = pd.concat([df, df_e], ignore_index = True)
         df = df.sort_values(by="Log_tid", ascending=False)
         df = df.drop_duplicates(subset=["VARIABEL", "orgnrNavn"], keep="first")    
-        print(df.head())
+        print(df.head(1))
     data = df.to_dict('rows')
     columns = [{'name': i, 'id': i} for i in df.columns]
     return data
@@ -279,7 +311,7 @@ def kontroll_enhetstabell(enhet_rad, data):
     if enhet_rad:
         df = pd.DataFrame().from_dict(data)
         print("enhetstabell")
-        print(df.head())
+        print(df.head(1))
         if "Editert_av" in df.columns:
              df = df[[config["id_variabel"], config["navn_variabel"], "VARIABEL"] + list(perioder.values()) + ["Editert_av", "Kommentar"]]
         else:
@@ -429,10 +461,9 @@ def kontroll_offcanvas_innhold(enhet_rad, tabelldata):
 
         df = pd.read_sql(f'SELECT Variabel, {config["perioder"]["t"]["periode"]}  AS VERDI FROM {config["tabeller"]["raadata"]} WHERE ORGNR = {str(enhet_klikket)[:9]} AND Variabel IN {metadata}', con=engine).drop_duplicates()
 
-        print(df.head())
+        print(df.head(1))
         data = df.to_dict("rows")
         columns = [{'name': i, 'id': i} for i in df.columns]
-        print(data)
         return dt.DataTable(
                 style_as_list_view = True,
                 style_cell = {'textAlign': 'left'},
