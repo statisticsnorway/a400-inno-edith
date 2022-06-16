@@ -105,12 +105,7 @@ body = html.Div([dbc.Container([
                                 dcc.Checklist(
                                     id = "checklist_scatter_grid",
                                     options = [
-                                        {"label": "Fjern 0-verdier", "value": "fjern"}
-                                    ]
-                                ),
-                                dcc.Checklist(
-                                    id = "trendline_scatter_grid",
-                                    options = [
+                                        {"label": "Fjern 0-verdier", "value": "fjern"},
                                         {"label": "Inkluder trendlinje", "value": "ols"}
                                     ]
                                 )

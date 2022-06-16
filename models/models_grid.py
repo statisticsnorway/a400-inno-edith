@@ -147,14 +147,23 @@ def table_grid(data, grupp, clickData):
 
 
 
-def scatterplot_grid(x, y, checklist, aggregat, clickData, scatter_aggregat, trendline):
+def scatterplot_grid(x, y, checklist, aggregat, clickData, scatter_aggregat):
     print("----- Starter scatterplot grid -----")
     print()
-    if trendline:
-        if "ols" in trendline:
+    print(checklist)
+    if checklist:
+        if "ols" in checklist:
             trendline = "ols"
+        else:
+            trendline = None
+        if "fjern" not in checklist:
+            inkluder_0 = True
+        else:
+            inkluder_0 = False
     else:
         trendline = None
+        inkluder_0 = False
+        
     tilpasning_til_spørring = ""
     variabel_filter = f"WHERE VARIABEL in {tuple([x]+[y])} "
     tilpasning_til_spørring = tilpasning_til_spørring + variabel_filter
@@ -196,10 +205,9 @@ def scatterplot_grid(x, y, checklist, aggregat, clickData, scatter_aggregat, tre
     else:
         df = df.pivot(index = "orgnrNavn", columns=["VARIABEL"], values = config["perioder"]["t"]["periode"]).reset_index()
     df[[x, y]] = df[[x, y]].astype(float)
-    if checklist != None: # Checklist starter som None
-        if len(checklist) != 0: # Hvis man har krysset av er lengde mer enn 0
-            df = df.loc[df[x] > 0]
-            df = df.loc[df[y] > 0]
+    if inkluder_0 == False: # Checklist starter som None
+        df = df.loc[df[x] > 0]
+        df = df.loc[df[y] > 0]
     if scatter_aggregat:
         fig = px.scatter(df,x = x,y = y, hover_name = df["orgnrNavn"], trendline=trendline, color = scatter_aggregat)
     else:

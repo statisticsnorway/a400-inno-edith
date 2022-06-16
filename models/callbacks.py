@@ -132,10 +132,9 @@ def get_callbacks(app):
                    Input('checklist_scatter_grid', 'value'),
                    Input('grupp', 'value'),
                    Input('treemap', 'clickData'),
-                  Input('scatter_aggregat', 'value'),
-                  Input('trendline_scatter_grid', 'value')])
-    def scatterplot_grid_fig(x, y, checklist, aggregat, clickData, scatter_aggregat, trendline):
-        return scatterplot_grid(x, y, checklist, aggregat, clickData, scatter_aggregat, trendline)
+                  Input('scatter_aggregat', 'value')])
+    def scatterplot_grid_fig(x, y, checklist, aggregat, clickData, scatter_aggregat):
+        return scatterplot_grid(x, y, checklist, aggregat, clickData, scatter_aggregat)
 
 
 
