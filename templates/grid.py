@@ -92,14 +92,24 @@ body = html.Div([dbc.Container([
                                     className="egendropdown"
                                 )
                             ]),
-                            dbc.Col(
+                            dbc.Col([
+                                "Fargelegging",
+                                dcc.Dropdown(
+                                id = 'scatter_aggregat',
+                                multi = False,
+                                options = options_grupp,
+                                placeholder = "Velg gruppering"
+                            )
+                            ]),
+                            dbc.Col([
                                 dcc.Checklist(
                                     id = "checklist_scatter_grid",
                                     options = [
-                                        {"label": "Fjern 0-verdier", "value": "fjern"}
+                                        {"label": "Fjern 0-verdier", "value": "fjern"},
+                                        {"label": "Inkluder trendlinje", "value": "ols"}
                                     ]
                                 )
-                            )
+                            ])
                         ])
                     ], label="Scatterplot"),
                     dbc.Tab([
@@ -243,5 +253,4 @@ def Grid():
         body,
     ])
     return layout
-
 

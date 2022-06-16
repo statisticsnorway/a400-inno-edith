@@ -42,10 +42,3 @@ Oppskrift: https://statistics-norway.atlassian.net/wiki/spaces/IA/pages/30526996
         app.run_server(<b>debug=True</b>, port=str(portnummer), mode=visningsmodus)
 
     * For å stoppe app'en, kjør nederste celle i notebook'en
-
-#### For oppstart fra Terminal (som egen app på sl-inno-p1)
-5) Start edith med kommandoen " python3 app.py" i et terminalvindu
-
-    * Fungerer ikke app'en helt som du har tenkt? Sjekk i terminal-vinduet! Feilmeldinger dukker opp der
-
-    * Ønsker du å stoppe kjøring av appen? I terminalen, trykk Ctrl+C
