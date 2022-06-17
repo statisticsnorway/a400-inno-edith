@@ -208,7 +208,21 @@ def feilliste_figur_test(feilliste, enhet_rad, tabelldata):
 
     innhold = []
 
-    if aktuell_feilliste in ["Urealistisk pris", " Urealistisk pris"]:
+    if aktuell_feilliste in [
+        ' Urealistisk pris',
+        'Urealistisk pris',
+        'Utgift til leasing virker feil',
+        'Leieutgift til leasing av driftsbyg virker urealistisk lav',
+        'Leieutgift til leasing av bygningsinventar virker urealistisk lav',
+        'Investeringen virker urealistisk lav',
+        ' Utgifter til vedlikehold virker urealisktisk høy',
+        'Investering i driftsbyg virker urealisktisk høy',
+        ' Utgift til leasing virker feil',
+        'Investering i inventar virker urealisktisk høy',
+        'Utgifter til vedlikehold virker urealisktisk lav',
+        'Utgifter til vedlikehold virker urealisktisk høy',
+        'Urealistisk høy kjøpesum'
+    ]:
         spørring = spørring + f"WHERE VARIABEL in ('{FELT_ID}')"
         df = pd.read_sql(spørring, con = engine)
         df["År_2021"] = df["År_2021"].astype(int)
@@ -216,12 +230,20 @@ def feilliste_figur_test(feilliste, enhet_rad, tabelldata):
         fig = go.Figure()
 
         dff = df.loc[df["ORGNR"] != enhet_klikket]
+        dff = dff.groupby("Driftsform").quantile(0.1).reset_index()
+        fig.add_trace(go.Bar(x = dff["Driftsform"], y = dff["År_2021"], name = "Bunn 10%", text = dff["År_2021"].round(), marker_color = "blue"))
+
+        dff = df.loc[df["ORGNR"] != enhet_klikket]
         dff = dff.groupby("Driftsform").mean().reset_index()
-        fig.add_trace(go.Bar(x = dff["Driftsform"], y = dff["År_2021"], name = "Snitt", text = dff["År_2021"].round()))
+        fig.add_trace(go.Bar(x = dff["Driftsform"], y = dff["År_2021"], name = "Snitt", text = dff["År_2021"].round(), marker_color = "green"))
+
+        dff = df.loc[df["ORGNR"] != enhet_klikket]
+        dff = dff.groupby("Driftsform").quantile(0.9).reset_index()
+        fig.add_trace(go.Bar(x = dff["Driftsform"], y = dff["År_2021"], name = "Topp 10%", text = dff["År_2021"].round(), marker_color = "red"))
 
         dff = df.loc[df["ORGNR"] == enhet_klikket]
         dff = dff.groupby("Driftsform").mean().reset_index()
-        fig.add_trace(go.Bar(x = dff["Driftsform"], y = dff["År_2021"], name = enhet_klikket, text = dff["År_2021"].round()))
+        fig.add_trace(go.Bar(x = dff["Driftsform"], y = dff["År_2021"], name = enhet_klikket, text = dff["År_2021"].round(), marker_color = "brown"))
 
         innhold = innhold + [dcc.Graph(figure = fig)]
 
