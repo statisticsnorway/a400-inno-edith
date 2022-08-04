@@ -27,7 +27,7 @@ with open("variabler.json") as variabler:
 nav = Navbar()
 
 #henter ut felt_id variabler
-df_opt_var = pd.read_sql(f"SELECT distinct(FELT_ID) FROM {config['tabeller']['svarinngang']}", con=engine) # Skal kanskje rename FELT_ID til noe annet etterhvert?
+df_opt_var = pd.read_sql(f"SELECT distinct(FELT_ID) FROM {config['tabeller']['svarinngang']}", con=engine).dropna() # Skal kanskje rename FELT_ID til noe annet etterhvert?
 options_var = [{'label': x, 'value': x} for x in df_opt_var["FELT_ID"].unique()]
 
 df_svar = pd.read_sql(f'SELECT * from {config["tabeller"]["svarinngang"]}', con=engine, parse_dates=['INN_DATO'])
