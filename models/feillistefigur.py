@@ -1,9 +1,10 @@
-
 import dash
 import dash_core_components as dcc
 from dash import no_update
 from dash.exceptions import PreventUpdate
 import dash_html_components as html
+
+import json
 
 import pandas as pd
 import numpy as np
@@ -14,12 +15,16 @@ import plotly.graph_objects as go
 from models.models_delt import connect, cardify_figure, table # For å importere grunnfunksjonalitet fra den delte filen
 conn, engine, db = connect() # Oppretter filstier som brukes i spørringer
 
+with open("config.json") as config:
+    config = json.load(config)
+
 def feilliste_figurer(feilliste, enhet_rad, tabelldata):
     valgt_rad          = tabelldata[enhet_rad["row"]]
     enhet_klikket      = valgt_rad["ORGNR"]
     enhet_klikket_navn = valgt_rad["NAVN"]
     FELT_ID            = valgt_rad["FELT_ID"]
     aktuell_feilliste          = valgt_rad["feilliste"] 
+    print("FELT ID er: " + FELT_ID)
     enhet_klikket_orgnrnavn = enhet_klikket + ": " + enhet_klikket_navn
     spørring = f"SELECT * FROM raadata "
     print("Eksperiment3: " + str(aktuell_feilliste))
@@ -94,6 +99,36 @@ def feilliste_figurer(feilliste, enhet_rad, tabelldata):
         df.loc[df["ORGNR"] == enhet_klikket, "valgt"] = enhet_klikket
         df.loc[df["ORGNR"] != enhet_klikket, "valgt"] = "Andre"
         fig = px.scatter(df, x = "DIESELDRIVFORBRUK", y = "DIESELDRIVUTGIFTER", color = "valgt")
+        innhold = innhold + [dcc.Graph(figure = fig)]
+
+    if aktuell_feilliste in [
+        "Pris pr SM3 propan bør ligge mellom 2000 og 12000 kroner",
+        "Pris pr tonn propan bør ligge mellom 1000 og 20000 kroner",
+        "Pris pr KWH propan bør ligge mellom 0,5 og 7 kroner",
+        "Pris pr tonn halm bør ligge mellom 100 og 1000 kroner",
+        " Pris pr M3 flis bør ligge mellom 10 og 500 kroner",
+        "Pris pr M3 flis bør ligge mellom 10 og 500 kroner"
+    ]:
+        print("Finner vare")
+        vare = FELT_ID[:-8]
+        print(vare + " er valgt vare")
+        spørring = spørring + f"WHERE VARIABEL in ('{vare}ENHET', '{vare}FORBRUK', '{vare}UTGIFTER')"
+        df = pd.read_sql(spørring, con = engine)
+        df = df.drop_duplicates()
+        df = df.pivot(
+            index='ORGNR',
+            columns='VARIABEL',
+            values=config["perioder"]["t"]["periode"]
+        ).reset_index()
+        df = df.dropna(subset = [f'{vare}ENHET', f'{vare}FORBRUK', f'{vare}UTGIFTER'])
+        df[f"{vare}FORBRUK"] = df[f"{vare}FORBRUK"].str.replace(",",".")
+        df[f"{vare}UTGIFTER"] = df[f"{vare}UTGIFTER"].str.replace(",",".")
+        df[f"{vare}FORBRUK"] = df[f"{vare}FORBRUK"].astype(float)
+        df[f"{vare}UTGIFTER"] = df[f"{vare}UTGIFTER"].astype(float)
+#        dff = df.loc[dff[f"{vare}ENHET"] == i]
+        df.loc[df["ORGNR"] == enhet_klikket, "valgt"] = enhet_klikket
+        df.loc[df["ORGNR"] != enhet_klikket, "valgt"] = "Andre"
+        fig = px.scatter(df, x = f"{vare}FORBRUK", y = f"{vare}UTGIFTER", hover_name = df.index, trendline = "ols", color = "valgt")
         innhold = innhold + [dcc.Graph(figure = fig)]
 
     return innhold
